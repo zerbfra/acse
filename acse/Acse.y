@@ -169,7 +169,7 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %left SHL_OP SHR_OP
 %left MINUS PLUS
 %left MUL_OP DIV_OP
-%right NOT
+%right NOT_OP
 
 /*=========================================================================
                          BISON GRAMMAR
@@ -617,6 +617,66 @@ exp: NUMBER      { $$ = create_expression ($1, IMMEDIATE); }
                                  (program, exp_r0, $2, SUB);
                         }
                      }
+    /** AGGIUNGO GRAMMATICA PER FATTORIALE ***/
+    | exp NOT_OP
+                {
+                    int r_reg = gen_load_immediate(program,1);
+                    int index_reg = getNewRegister(program);
+                    
+                    if($1.expression_type == IMMEDIATE) {
+                        // carico il valore di exp in index_reg: immediato
+                        gen_addi_instruction(program,index_reg,REG_0,$1.value);
+                    } else {
+                        // lo carico essendo registro
+                        gen_add_instruction(program,index_reg,REG_0,$1.value,CG_DIRECT_ALL);
+                    }
+                    
+                    t_axe_label *end = newLabel(program);
+                    
+                    // label per tornare qua se necessito di looppare
+                    t_axe_label *loop = assignNewLabel(program);
+                    
+                    // moltiplico index_reg (parte dal fondo) * r_reg (inizialmente 1)
+                    gen_mul_instruction(program,r_reg,r_reg,index_reg,CG_DIRECT_ALL);
+                    gen_subi_instruction(program,index_reg,index_reg,1);
+                    
+                    // se ancora maggiore di 0, devo proseguire e fare il loop
+                    gen_bgt_instruction(program,loop,0);
+                    
+                    // assegno la label per la fine
+                    assignLabel(program,end);
+                    
+                    // assegno il valore che ho trovato a $$ (che è la variabile nel programma)
+                    // r_reg contiene il valore del fattoriale
+                    $$ = create_expression(r_reg, REGISTER);
+                }
+/*      
+ *  Funziona ma fa un reduce-conflict con l'altra rule di OR_OP
+ *  Commentare una delle due rule per compilare
+ */
+ 
+        | OR_OP exp OR_OP %prec NOT_OP
+                {
+                    int temp = gen_load_immediate(program,1)
+                    if($2.expression_type == IMMEDIATE) {
+                        // se è immediate, restitusco sempre il valore positivo
+                        $$ = create_expression($2.value > 0 ? $2.value : -$2.value, IMMEDIATE);
+                    } else {
+                        // carico in temp il valore
+                        gen_add_instruction(program,temp,REG_0,$2.value,CG_DIRCT_ALL);
+                        // se positivo jump alla fine
+                        t_axe_label *end = newLabel(program);
+                        gen_bgt_instruction(program,end,0);
+                        
+                        // altrimenti, moltiplico per -1
+                        gen_muli_instruction(program,temp,temp,-1);
+                        assignLabel(program,end);
+                        
+                        $$ = create_expression(temp, REGISTER);
+                        
+                    }
+                }
+
 ;
 
 %%
