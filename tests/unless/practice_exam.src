@@ -1,0 +1,7 @@
+int x, y; 
+read(x); 
+y = 0;
+eval { 
+	y = 1;
+} unless x==5; 
+write(y);

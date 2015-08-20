@@ -1,0 +1,9 @@
+int x;
+
+read(x);
+
+while (0) {
+   write(0);
+}
+
+write(x);

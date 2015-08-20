@@ -1,0 +1,6 @@
+int a,b,c;
+
+d = 5;
+a = 7;
+
+write(a + d);

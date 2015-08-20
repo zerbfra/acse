@@ -1,0 +1,15 @@
+.PHONY: all
+
+all: $(project)
+
+$(project): $(objects)
+	gcc -o $@ $^
+
+# Implicit rule for C
+%.o: %.c
+	gcc -c -o $@ $<
+
+# Include dependencies
+include $(deps)
+
+

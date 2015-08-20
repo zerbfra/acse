@@ -1,0 +1,121 @@
+int b,d;
+int a[21];
+int c;
+
+/*b = 5;*/
+
+
+a[0] = 0;
+a[1] = 1;
+a[2] = 2;
+a[3] = 3;
+a[4] = 4;
+a[5] = 5;
+a[6] = 6;
+a[7] = 7;
+a[8] = 8;
+a[9] = 9;
+a[10] = 10;
+a[11] = 11;
+a[12] = 12;
+a[13] = 13;
+a[14] = 14;
+a[15] = 15;
+a[16] = 16;
+a[17] = 17;
+a[18] = 18;
+a[19] = 19;
+a[20] = 20;
+
+
+b = a[0];
+
+write(b);
+b = a[1];
+
+write(b);
+b = a[2];
+
+write(b);
+b = a[3];
+
+write(b);
+b = a[4];
+
+write(b);
+b = a[5];
+
+write(b);
+b = a[6];
+
+write(b);
+b = a[7];
+
+write(b);
+b = a[8];
+
+write(b);
+b = a[9];
+
+write(b);
+b = a[10];
+
+write(b);
+b = a[11];
+
+write(b);
+b = a[12];
+
+write(b);
+b = a[13];
+
+write(b);
+b = a[14];
+
+write(b);
+b = a[15];
+
+write(b);
+b = a[16];
+
+write(b);
+b = a[17];
+
+write(b);
+b = a[18];
+
+write(b);
+b = a[19];
+
+write(b);
+
+b = a[20];
+write(b); /* 20 */
+write(c); /* 0 */
+c = a[20];
+write(c); /* 20 */
+c = b;
+write(c); /* 20 */
+c = b + a[20]; 
+write(c); /* 40 */
+c = b + a[20] + 5 + a[17];
+write(c); /* 62 */
+/* write(d); */ 
+d = c + a[15] + 12;
+write(d); /* 89 */
+/*b = a[2];*/ 
+write(d); /* 89 */
+write(b); /* 20 */
+write(d); /* 89 */
+write(d); /* 89 */
+b = a[3]; 
+write(d); /* 89 */
+write(b); /* 3 */
+write(d); /* 89 */
+b = a[4]; 
+write(b); /* 4 */
+write(d); /* 89 */
+
+/* write(c); */ /* 62 */
+/* write(d); */ /* 89 */
+

@@ -1,0 +1,20 @@
+int value, fact;
+
+read(value);
+
+if (value < 0)
+{
+	write(-1);
+	return;
+}
+
+fact = 1;
+
+while(value > 0)
+{
+	fact = value * fact;
+	value = value - 1;
+}
+
+write(fact);
+

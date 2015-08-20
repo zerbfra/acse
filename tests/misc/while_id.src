@@ -1,0 +1,14 @@
+int s = 0;
+int x;
+
+read(x);
+
+if (x >= 0) {
+   while (x) {
+      s = s + x;
+      x = x - 1;
+   }
+   write(s);
+} else {
+   write(-1);
+}

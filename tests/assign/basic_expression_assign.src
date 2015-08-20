@@ -1,0 +1,5 @@
+int x, y;
+
+y = 4;
+write(x = y + 3);
+write(x);

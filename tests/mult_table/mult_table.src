@@ -1,0 +1,12 @@
+int value, counter;
+
+read(value);
+
+counter = 1;
+
+while(counter <= 10)
+{
+	write(value * counter);
+	counter = counter + 1;
+}
+

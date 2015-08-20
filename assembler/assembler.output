@@ -1,0 +1,651 @@
+State 11 conflicts: 1 shift/reduce
+State 36 conflicts: 1 shift/reduce
+State 45 conflicts: 1 shift/reduce
+
+
+Grammar
+
+    0 $accept: asm $end
+
+    1 asm: asm data_segm instruction_segm
+    2    | data_segm instruction_segm
+    3    | instruction_segm
+
+    4 instruction_segm: instruction_segm instruction
+    5                 | instruction
+
+    6 instruction: instr comment
+    7            | label_decl instr comment
+    8            | instr
+    9            | label_decl instr
+
+   10 instr: OPCODE3 register REG register
+   11      | OPCODE2 REG REG immediate
+   12      | OPCODEI REG address
+   13      | CCODE address
+   14      | HALT
+   15      | NOP
+
+   16 data_segm: data_segm data_def
+   17          | data_def comment
+   18          | data_def
+
+   19 data_def: label_decl data_value
+   20         | data_value
+
+   21 label_decl: ETI COLON
+
+   22 data_value: _WORD IMM
+   23           | _SPACE IMM
+
+   24 register: REG
+   25         | LPAR REG RPAR
+
+   26 immediate: BEGIN_IMMEDIATE IMM
+   27          | BEGIN_IMMEDIATE MINUS IMM
+
+   28 address: ETI
+   29        | IMM
+
+   30 comment: BEGIN_COMMENT COMMENT END_COMMENT
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256)
+OPCODE3 (258) 10
+OPCODE2 (259) 11
+OPCODEI (260) 12
+CCODE (261) 13
+HALT (262) 14
+NOP (263) 15
+_WORD (264) 22
+_SPACE (265) 23
+REG (266) 10 11 12 24 25
+LPAR (267) 25
+RPAR (268) 25
+COLON (269) 21
+MINUS (270) 27
+BEGIN_IMMEDIATE (271) 26 27
+BEGIN_COMMENT (272) 30
+END_COMMENT (273) 30
+COMMENT (274) 30
+ETI (275) 21 28
+IMM (276) 22 23 26 27 29
+
+
+Nonterminals, with rules where they appear
+
+$accept (22)
+    on left: 0
+asm (23)
+    on left: 1 2 3, on right: 0 1
+instruction_segm (24)
+    on left: 4 5, on right: 1 2 3 4
+instruction (25)
+    on left: 6 7 8 9, on right: 4 5
+instr (26)
+    on left: 10 11 12 13 14 15, on right: 6 7 8 9
+data_segm (27)
+    on left: 16 17 18, on right: 1 2 16
+data_def (28)
+    on left: 19 20, on right: 16 17 18
+label_decl (29)
+    on left: 21, on right: 7 9 19
+data_value (30)
+    on left: 22 23, on right: 19 20
+register (31)
+    on left: 24 25, on right: 10
+immediate (32)
+    on left: 26 27, on right: 11
+address (33)
+    on left: 28 29, on right: 12 13
+comment (34)
+    on left: 30, on right: 6 7 17
+
+
+state 0
+
+    0 $accept: . asm $end
+
+    OPCODE3  shift, and go to state 1
+    OPCODE2  shift, and go to state 2
+    OPCODEI  shift, and go to state 3
+    CCODE    shift, and go to state 4
+    HALT     shift, and go to state 5
+    NOP      shift, and go to state 6
+    _WORD    shift, and go to state 7
+    _SPACE   shift, and go to state 8
+    ETI      shift, and go to state 9
+
+    asm               go to state 10
+    instruction_segm  go to state 11
+    instruction       go to state 12
+    instr             go to state 13
+    data_segm         go to state 14
+    data_def          go to state 15
+    label_decl        go to state 16
+    data_value        go to state 17
+
+
+state 1
+
+   10 instr: OPCODE3 . register REG register
+
+    REG   shift, and go to state 18
+    LPAR  shift, and go to state 19
+
+    register  go to state 20
+
+
+state 2
+
+   11 instr: OPCODE2 . REG REG immediate
+
+    REG  shift, and go to state 21
+
+
+state 3
+
+   12 instr: OPCODEI . REG address
+
+    REG  shift, and go to state 22
+
+
+state 4
+
+   13 instr: CCODE . address
+
+    ETI  shift, and go to state 23
+    IMM  shift, and go to state 24
+
+    address  go to state 25
+
+
+state 5
+
+   14 instr: HALT .
+
+    $default  reduce using rule 14 (instr)
+
+
+state 6
+
+   15 instr: NOP .
+
+    $default  reduce using rule 15 (instr)
+
+
+state 7
+
+   22 data_value: _WORD . IMM
+
+    IMM  shift, and go to state 26
+
+
+state 8
+
+   23 data_value: _SPACE . IMM
+
+    IMM  shift, and go to state 27
+
+
+state 9
+
+   21 label_decl: ETI . COLON
+
+    COLON  shift, and go to state 28
+
+
+state 10
+
+    0 $accept: asm . $end
+    1 asm: asm . data_segm instruction_segm
+
+    $end    shift, and go to state 29
+    _WORD   shift, and go to state 7
+    _SPACE  shift, and go to state 8
+    ETI     shift, and go to state 9
+
+    data_segm   go to state 30
+    data_def    go to state 15
+    label_decl  go to state 31
+    data_value  go to state 17
+
+
+state 11
+
+    3 asm: instruction_segm .
+    4 instruction_segm: instruction_segm . instruction
+
+    OPCODE3  shift, and go to state 1
+    OPCODE2  shift, and go to state 2
+    OPCODEI  shift, and go to state 3
+    CCODE    shift, and go to state 4
+    HALT     shift, and go to state 5
+    NOP      shift, and go to state 6
+    ETI      shift, and go to state 9
+
+    ETI       [reduce using rule 3 (asm)]
+    $default  reduce using rule 3 (asm)
+
+    instruction  go to state 32
+    instr        go to state 13
+    label_decl   go to state 33
+
+
+state 12
+
+    5 instruction_segm: instruction .
+
+    $default  reduce using rule 5 (instruction_segm)
+
+
+state 13
+
+    6 instruction: instr . comment
+    8            | instr .
+
+    BEGIN_COMMENT  shift, and go to state 34
+
+    $default  reduce using rule 8 (instruction)
+
+    comment  go to state 35
+
+
+state 14
+
+    2 asm: data_segm . instruction_segm
+   16 data_segm: data_segm . data_def
+
+    OPCODE3  shift, and go to state 1
+    OPCODE2  shift, and go to state 2
+    OPCODEI  shift, and go to state 3
+    CCODE    shift, and go to state 4
+    HALT     shift, and go to state 5
+    NOP      shift, and go to state 6
+    _WORD    shift, and go to state 7
+    _SPACE   shift, and go to state 8
+    ETI      shift, and go to state 9
+
+    instruction_segm  go to state 36
+    instruction       go to state 12
+    instr             go to state 13
+    data_def          go to state 37
+    label_decl        go to state 16
+    data_value        go to state 17
+
+
+state 15
+
+   17 data_segm: data_def . comment
+   18          | data_def .
+
+    BEGIN_COMMENT  shift, and go to state 34
+
+    $default  reduce using rule 18 (data_segm)
+
+    comment  go to state 38
+
+
+state 16
+
+    7 instruction: label_decl . instr comment
+    9            | label_decl . instr
+   19 data_def: label_decl . data_value
+
+    OPCODE3  shift, and go to state 1
+    OPCODE2  shift, and go to state 2
+    OPCODEI  shift, and go to state 3
+    CCODE    shift, and go to state 4
+    HALT     shift, and go to state 5
+    NOP      shift, and go to state 6
+    _WORD    shift, and go to state 7
+    _SPACE   shift, and go to state 8
+
+    instr       go to state 39
+    data_value  go to state 40
+
+
+state 17
+
+   20 data_def: data_value .
+
+    $default  reduce using rule 20 (data_def)
+
+
+state 18
+
+   24 register: REG .
+
+    $default  reduce using rule 24 (register)
+
+
+state 19
+
+   25 register: LPAR . REG RPAR
+
+    REG  shift, and go to state 41
+
+
+state 20
+
+   10 instr: OPCODE3 register . REG register
+
+    REG  shift, and go to state 42
+
+
+state 21
+
+   11 instr: OPCODE2 REG . REG immediate
+
+    REG  shift, and go to state 43
+
+
+state 22
+
+   12 instr: OPCODEI REG . address
+
+    ETI  shift, and go to state 23
+    IMM  shift, and go to state 24
+
+    address  go to state 44
+
+
+state 23
+
+   28 address: ETI .
+
+    $default  reduce using rule 28 (address)
+
+
+state 24
+
+   29 address: IMM .
+
+    $default  reduce using rule 29 (address)
+
+
+state 25
+
+   13 instr: CCODE address .
+
+    $default  reduce using rule 13 (instr)
+
+
+state 26
+
+   22 data_value: _WORD IMM .
+
+    $default  reduce using rule 22 (data_value)
+
+
+state 27
+
+   23 data_value: _SPACE IMM .
+
+    $default  reduce using rule 23 (data_value)
+
+
+state 28
+
+   21 label_decl: ETI COLON .
+
+    $default  reduce using rule 21 (label_decl)
+
+
+state 29
+
+    0 $accept: asm $end .
+
+    $default  accept
+
+
+state 30
+
+    1 asm: asm data_segm . instruction_segm
+   16 data_segm: data_segm . data_def
+
+    OPCODE3  shift, and go to state 1
+    OPCODE2  shift, and go to state 2
+    OPCODEI  shift, and go to state 3
+    CCODE    shift, and go to state 4
+    HALT     shift, and go to state 5
+    NOP      shift, and go to state 6
+    _WORD    shift, and go to state 7
+    _SPACE   shift, and go to state 8
+    ETI      shift, and go to state 9
+
+    instruction_segm  go to state 45
+    instruction       go to state 12
+    instr             go to state 13
+    data_def          go to state 37
+    label_decl        go to state 16
+    data_value        go to state 17
+
+
+state 31
+
+   19 data_def: label_decl . data_value
+
+    _WORD   shift, and go to state 7
+    _SPACE  shift, and go to state 8
+
+    data_value  go to state 40
+
+
+state 32
+
+    4 instruction_segm: instruction_segm instruction .
+
+    $default  reduce using rule 4 (instruction_segm)
+
+
+state 33
+
+    7 instruction: label_decl . instr comment
+    9            | label_decl . instr
+
+    OPCODE3  shift, and go to state 1
+    OPCODE2  shift, and go to state 2
+    OPCODEI  shift, and go to state 3
+    CCODE    shift, and go to state 4
+    HALT     shift, and go to state 5
+    NOP      shift, and go to state 6
+
+    instr  go to state 39
+
+
+state 34
+
+   30 comment: BEGIN_COMMENT . COMMENT END_COMMENT
+
+    COMMENT  shift, and go to state 46
+
+
+state 35
+
+    6 instruction: instr comment .
+
+    $default  reduce using rule 6 (instruction)
+
+
+state 36
+
+    2 asm: data_segm instruction_segm .
+    4 instruction_segm: instruction_segm . instruction
+
+    OPCODE3  shift, and go to state 1
+    OPCODE2  shift, and go to state 2
+    OPCODEI  shift, and go to state 3
+    CCODE    shift, and go to state 4
+    HALT     shift, and go to state 5
+    NOP      shift, and go to state 6
+    ETI      shift, and go to state 9
+
+    ETI       [reduce using rule 2 (asm)]
+    $default  reduce using rule 2 (asm)
+
+    instruction  go to state 32
+    instr        go to state 13
+    label_decl   go to state 33
+
+
+state 37
+
+   16 data_segm: data_segm data_def .
+
+    $default  reduce using rule 16 (data_segm)
+
+
+state 38
+
+   17 data_segm: data_def comment .
+
+    $default  reduce using rule 17 (data_segm)
+
+
+state 39
+
+    7 instruction: label_decl instr . comment
+    9            | label_decl instr .
+
+    BEGIN_COMMENT  shift, and go to state 34
+
+    $default  reduce using rule 9 (instruction)
+
+    comment  go to state 47
+
+
+state 40
+
+   19 data_def: label_decl data_value .
+
+    $default  reduce using rule 19 (data_def)
+
+
+state 41
+
+   25 register: LPAR REG . RPAR
+
+    RPAR  shift, and go to state 48
+
+
+state 42
+
+   10 instr: OPCODE3 register REG . register
+
+    REG   shift, and go to state 18
+    LPAR  shift, and go to state 19
+
+    register  go to state 49
+
+
+state 43
+
+   11 instr: OPCODE2 REG REG . immediate
+
+    BEGIN_IMMEDIATE  shift, and go to state 50
+
+    immediate  go to state 51
+
+
+state 44
+
+   12 instr: OPCODEI REG address .
+
+    $default  reduce using rule 12 (instr)
+
+
+state 45
+
+    1 asm: asm data_segm instruction_segm .
+    4 instruction_segm: instruction_segm . instruction
+
+    OPCODE3  shift, and go to state 1
+    OPCODE2  shift, and go to state 2
+    OPCODEI  shift, and go to state 3
+    CCODE    shift, and go to state 4
+    HALT     shift, and go to state 5
+    NOP      shift, and go to state 6
+    ETI      shift, and go to state 9
+
+    ETI       [reduce using rule 1 (asm)]
+    $default  reduce using rule 1 (asm)
+
+    instruction  go to state 32
+    instr        go to state 13
+    label_decl   go to state 33
+
+
+state 46
+
+   30 comment: BEGIN_COMMENT COMMENT . END_COMMENT
+
+    END_COMMENT  shift, and go to state 52
+
+
+state 47
+
+    7 instruction: label_decl instr comment .
+
+    $default  reduce using rule 7 (instruction)
+
+
+state 48
+
+   25 register: LPAR REG RPAR .
+
+    $default  reduce using rule 25 (register)
+
+
+state 49
+
+   10 instr: OPCODE3 register REG register .
+
+    $default  reduce using rule 10 (instr)
+
+
+state 50
+
+   26 immediate: BEGIN_IMMEDIATE . IMM
+   27          | BEGIN_IMMEDIATE . MINUS IMM
+
+    MINUS  shift, and go to state 53
+    IMM    shift, and go to state 54
+
+
+state 51
+
+   11 instr: OPCODE2 REG REG immediate .
+
+    $default  reduce using rule 11 (instr)
+
+
+state 52
+
+   30 comment: BEGIN_COMMENT COMMENT END_COMMENT .
+
+    $default  reduce using rule 30 (comment)
+
+
+state 53
+
+   27 immediate: BEGIN_IMMEDIATE MINUS . IMM
+
+    IMM  shift, and go to state 55
+
+
+state 54
+
+   26 immediate: BEGIN_IMMEDIATE IMM .
+
+    $default  reduce using rule 26 (immediate)
+
+
+state 55
+
+   27 immediate: BEGIN_IMMEDIATE MINUS IMM .
+
+    $default  reduce using rule 27 (immediate)

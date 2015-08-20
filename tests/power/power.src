@@ -1,0 +1,36 @@
+/*
+*	Author: Andrea Di Biagio
+*	power.src
+*/
+
+int value, result, power, negative;
+
+read(value);
+read(power);
+
+if (power == 0)
+{
+	write(0);
+	return;
+}
+
+if (power < 0)
+{
+	negative = 1;
+	power = -power;
+}
+else
+ 	negative = 0;
+
+result = value;
+while (power > 1)
+{
+	result = result * value;
+	power = power - 1;
+}
+
+if (negative == 1)
+	result = 1 / result;
+
+write(result);
+

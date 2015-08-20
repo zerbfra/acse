@@ -1,0 +1,13 @@
+int a,b,c;
+int result;
+
+read(a);
+read(b);
+read(c);
+
+result = a + b;
+
+result = result + c;
+
+write(result);
+

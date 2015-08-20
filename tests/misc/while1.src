@@ -1,0 +1,22 @@
+int a[10];
+int x = 0;
+int k = 0;
+
+while (k < 10) {
+  read(x);
+  a[k] = x;
+  k = k + 1;
+}
+x = a[9];
+
+/* Look for the first occurrence of the last element */
+k = 0;
+while (1) {
+  /* Not actually an infinite loop:
+     we cannot go beyond the last element */
+  if (x == a[k]) {
+    write(k);
+    return;
+  }
+  k = k + 1;
+}

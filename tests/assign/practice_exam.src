@@ -1,0 +1,6 @@
+int x, y, z, a[3];
+x = y = z = a[0] = 1; 
+write( x = y + 3 ); 
+z = (y = 2) * x; 
+x = z + y;
+write( x );

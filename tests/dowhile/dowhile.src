@@ -1,0 +1,12 @@
+int a,b;
+
+a = 0;
+read(b);
+
+do
+{
+	a = a + 1;
+	b = b - 1;
+}while(b > 0);
+
+write(a);

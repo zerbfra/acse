@@ -1,0 +1,19 @@
+objects=$(patsubst %.src,%.o,$(wildcard *.src))
+
+test : $(objects)
+
+%.o : %.asm
+	$(asm) $< $@	
+
+%.asm : %.src
+	$(acse) $< $@
+
+.PRECIOUS : %.asm
+
+.PHONY : clean test
+
+clean :
+	rm -f *.out
+	rm -f *.cfg
+	rm -f *.asm
+	rm -f *.o
