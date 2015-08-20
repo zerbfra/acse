@@ -147,6 +147,9 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token <label> UNLESS
 %token <foreach_stmt> FOR
 
+/* aggiungo il token */
+%token <label> ASSERT
+
 %type <expr> exp
 %type <expr> assign_statement
 %type <decl> declaration
@@ -262,6 +265,7 @@ statements  : statements statement       { /* does nothing */ }
 statement   : assign_statement SEMI      { /* does nothing */ }
             | control_statement          { /* does nothing */ }
             | read_write_statement SEMI  { /* does nothing */ }
+            | assert_statement SEMI      { /* does nothing */ } /* aggiungo lo statement */
             | SEMI            { gen_nop_instruction(program); }
 ;
 
@@ -276,6 +280,27 @@ control_statement : if_statement         { /* does nothing */ }
 read_write_statement : read_statement  { /* does nothing */ }
                      | write_statement { /* does nothing */ }
 ;
+
+/* GRAMMATICA AGGIUNTIVA */
+
+assert_statement: ASSERT LPAR exp RPAR
+            {
+                $1 = newLabel(program);
+                if($3.expression_type != IMMEDIATE) {
+                    /* register type, devo fare le operazioni per valutarne il valore*/
+                    
+                    gen_andb_instruction(program,$3.value,$3.value,$3.value,CG_DIRECT_ALL);
+                    /* se non è uguale a 0 procedo alla fine dell'assert */
+                    gen_bne_instruction(program,$1,0);
+                    /* altrimenti esco */
+                    gen_halt_instruction(program); 
+                } else {
+                    if($3.value == 0) gen_halt_instruction(program);
+                }
+                assignLabel(program,$1);
+            }
+;
+
 
 assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp
             {

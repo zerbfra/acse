@@ -1,0 +1,12 @@
+	.data
+L0 : 	.WORD 0
+	.text
+	READ R1 0
+	ANDB R1 R1 R1
+	STORE R1 L0
+	BNE L1
+	HALT
+L1 : 	LOAD R1 L0
+	WRITE R1 0
+	STORE R1 L0
+	HALT
