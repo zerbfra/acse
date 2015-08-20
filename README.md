@@ -9,21 +9,21 @@ You can navigate through the different branches of this repository to see the di
 ## How to
 
 To install the ACSE compiler type in the console:
- make
+ `make`
 
 To compile some examples (located in the directory ./tests) type:
- make tests
+ `make tests`
 
 
 In order to use the compiler/assembler/executor at first you have
 to export the directory ./bin in your current PATH as follows:
 
-export PATH=`pwd`/bin:$PATH
+``export PATH=`pwd`/bin:$PATH``
 
 
 You can compile and run new Lance programs in this way (suppose you
 have saved a Lance program in 'myprog.src'):
-
+`
  acse myprog.src myprog.asm
  asm myprog.asm myprog.o
- mace myprog.o
+ mace myprog.o`
