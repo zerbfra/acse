@@ -4,7 +4,9 @@ ACSE (Advanced Compiler System for Education) is a simple compiler de- veloped f
 
 _This version works also under Mac OSX Yosemite and El Capitan (edited some files to work with new version of gcc etc...)_
 
-You can navigate through the different branches of this repository to see the different exercises.
+ACSE was provided to students in "Formal Languages and Compilers (FLC)" course at Politecnico di Milano.
+
+You can navigate through the different branches of this repository to see the different exercises I made in order to prepare for the exam.
 
 ## How to
 
