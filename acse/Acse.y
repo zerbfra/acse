@@ -111,7 +111,7 @@ t_list *condStack = NULL;
    t_while_statement while_stmt;
    t_unless_statement unless_stmt;
    t_foreach_statement foreach_stmt;
-   t_cond_statement *cond_stmt; /* DEVE ESSERE UN PUNTATORE PERCHE' LO METTO IN UNA LISTA */
+   t_cond_statement *cond_stmt; /* DEVE ESSERE UN PUNTATORE PERCHE' LO METTO IN UNA LISTA, vedi codice seguente */
 } 
 /*=========================================================================
                                TOKENS 
@@ -293,6 +293,7 @@ cond_statement: COND LBRACE
             $1->label_next = newLabel(program);
             $1->label_end = newLabel(program);
             
+            /* ecco il motivo per cui mi serve che cond_stmt come puntatore, perchè va in una lista! */
             condStack = addFirst(condStack,$1);
         } cond_block RBRACE {
             assignLabel(program,$1->label_end);
@@ -318,18 +319,29 @@ case_statement: CASE exp COLON
                 gen_andb_instruction(program,$2.value,$2.value,$2.value,CG_DIRECT_ALL);
             }
             // assegno la label next
-            t_axe_label *l = newLabel(program);
+            //t_axe_label *l = newLabel(program);
             
+            
+            /* recupero la prima sullo stack che ho creato. In particolare:
+                - faccio casting perchè LDATA altrimenti non sarebbe un t_cond_statement e non ne troverei le proprietà
+                - LDATA è una macro per recuperare ->data in una lista
+                - getElementAt(condStack,0) recupera l'elemento in cima (0) allo stack
+             */
             t_cond_statement *firstCond = (t_cond_statement *)LDATA(getElementAt(condStack,0));
-            firstCond->label_next = l;
+            // istazio la label_next
+            firstCond->label_next = newLabel(program);
             
-            gen_beq_instruction(program,l,0);
+            /* Salto alla prossima se questa non è stata soddisfatta da exp ($2) */
+            gen_beq_instruction(program,firstCond->label_next,0);
             
             
         } statements
         {
             t_cond_statement *firstCond = (t_cond_statement *)LDATA(getElementAt(condStack,0));
+            /* terminato, salto alla fine, perchè ne ho eseguita una */
             gen_bt_instruction(program,firstCond->label_end,0);
+            
+            /* assegno la label_next alla prossima istruzione (un altro case) */
             assignLabel(program,firstCond->label_next);
         }
 ;
