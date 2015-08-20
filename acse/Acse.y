@@ -90,6 +90,8 @@ t_reg_allocator *RA;       /* Register allocator. It implements the "Linear scan
 
 t_io_infos *file_infos;    /* input and output files used by the compiler */
 
+t_try_catch_statement *cur_try = NULL; /* specifico se sono all'interno di un blocco try-catch */
+
 %}
 
 %expect 1
@@ -108,6 +110,7 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
    t_while_statement while_stmt;
    t_unless_statement unless_stmt;
    t_foreach_statement foreach_stmt;
+   t_try_catch_statement try_catch_stmt; /* associo la struttura alla dichiarazione */
 } 
 /*=========================================================================
                                TOKENS 
@@ -134,6 +137,10 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token <unless_stmt> EVAL
 %token <label> UNLESS
 %token <foreach_stmt> FOR
+
+%token <try_catch_stmt> TRY /* cosi lo istanzia con la struttura relativa */
+%token CATCH
+%token THROW
 
 %type <expr> exp
 %type <expr> assign_statement
@@ -258,12 +265,49 @@ control_statement : if_statement         { /* does nothing */ }
             | while_statement            { /* does nothing */ }
             | do_while_statement SEMI    { /* does nothing */ }
 			| foreach_statement			 { /* does nothing */ }
+            | try_catch_statement        { /* does nothing */ } /* elenco nei controlli i due statements */
+            | throw_statement SEMI       { /* does nothing */ }
             | return_statement SEMI      { /* does nothing */ }
 ;
 
 read_write_statement : read_statement  { /* does nothing */ }
                      | write_statement { /* does nothing */ }
 ;
+
+
+/* GRAMMATICA TRY-CATCH-THROW */
+
+try_catch_statement: TRY
+            {
+                $1.label_catcher = newLabel(program);
+                $1.label_end = newLabel(program);
+                
+                cur_try = &$1; /* indico con & il catch corrente, per individuare l'indirizzo in memoria */
+                /* chiaramente ora cur_try non è più NULL e punta a qualcosa, utile nel throw */
+                
+            } code_block
+            {
+                /* assegna la label per il catch */
+                assignLabel(program,$1.label_catcher);
+            } CATCH code_block
+            {
+                /* fissa label per la fine */
+                assignLabel(program,$1.label_end);
+            }
+;
+
+throw_statement: THROW
+            {
+                if(cur_try != NULL) {
+                    /* siccome ho settato il cur_try, posso saltare alla sua fine */
+                    gen_bt_instruction(program,cur_try->label_catcher,0);
+                } else {
+                    /* segnalo l'errore di sintassi */
+                    notifyError(AXE_SYNTAX_ERROR);
+                }
+            }
+;
+
 
 assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp
             {

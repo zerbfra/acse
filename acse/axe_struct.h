@@ -106,6 +106,14 @@ typedef struct t_axe_declaration
                            * or an empty string "") */
 } t_axe_declaration;
 
+/** definisco la struct per il try-catch **/
+
+typedef struct t_try_catch_statement {
+    t_axe_label *label_catcher;
+    t_axe_label *label_end;
+} t_try_catch_statement;
+
+
 typedef struct t_while_statement
 {
    t_axe_label *label_condition;   /* this label points to the expression

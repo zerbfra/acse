@@ -1,0 +1,14 @@
+try {
+    try {
+        throw;
+        write(0);
+
+    } catch {
+        write(1);
+    }
+
+    write(2);
+
+} catch {
+    write(3);
+}
