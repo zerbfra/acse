@@ -2,7 +2,7 @@
 
 ACSE (Advanced Compiler System for Education) is a simple compiler de- veloped for educational purpose as a tool for the course “Formal languages and compiler”. ACSE is able to translate a source code written in LanCE 1.3 (Language for Compilers Education) into an assembly for the MACE archi- tecture (see the MACE documentation in Chapter 3). Figure 1.1 shows the components mentioned above and their interaction.
 
-_This version works also under Mac OSX Yosemite/El Capitan (edited some file to work with new version of gcc etc...)_
+_This version works also under Mac OSX Yosemite and El Capitan (edited some files to work with new version of gcc etc...)_
 
 You can navigate through the different branches of this repository to see the different exercises.
 
