@@ -287,6 +287,9 @@ try_catch_statement: TRY
                 
             } code_block
             {
+                /* resetto il cur_try una volta usato dal throw (che può stare solo nel try) */
+                cur_try = NULL;
+                
                 /* assegna la label per il catch */
                 assignLabel(program,$1.label_catcher);
             } CATCH code_block
