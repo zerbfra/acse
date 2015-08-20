@@ -111,6 +111,18 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 } 
 /*=========================================================================
                                TOKENS 
+ Nei tokens, alcuni sono preceduti dalla struttura che devono chiamare.
+ Ad esempio, il WHILE ha in fronte <while_stmt> che va ad istanziare la relativa
+ struttura. Ci si può referenziare a questa usando $1 nella grammatica, andando
+ a recuperare le variabili della struttura stessa ($1 perchè è il primo parametro).
+ 
+ Altre, ad esempio il DO, non hanno bisogno di una struttura complessa ma di una
+ sola label, perciò si utilizza semplicemente <label> e ci si riferenzia ad essa
+ come $1. Si può infatti creare $1 = newLabel(program);
+ 
+ Altre ancora, non hanno nessuna "entità" in fronte: questo perchè non necessitano
+ di label per fare dei jump o simili (esempio: RETURN, WRITE...)
+ 
 =========================================================================*/
 %start program
 
