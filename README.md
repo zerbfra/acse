@@ -20,8 +20,9 @@ to export the directory ./bin in your current PATH as follows:
 
 You can compile and run new Lance programs in this way (suppose you
 have saved a Lance program in 'myprog.src'):
-`acse myprog.src myprog.asm
 
- asm myprog.asm myprog.o
+`acse myprog.src myprog.asm`
 
- mace myprog.o`
+`asm myprog.asm myprog.o`
+
+`mace myprog.o`
