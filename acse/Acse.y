@@ -90,6 +90,8 @@ t_reg_allocator *RA;       /* Register allocator. It implements the "Linear scan
 
 t_io_infos *file_infos;    /* input and output files used by the compiler */
 
+t_list *loop_nest = NULL;
+
 %}
 
 %expect 1
@@ -123,6 +125,7 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token RETURN
 %token READ
 %token WRITE
+%token CONTINUE
 
 %token <label> DO
 %token <while_stmt> WHILE
@@ -250,6 +253,7 @@ statements  : statements statement       { /* does nothing */ }
 statement   : assign_statement SEMI      { /* does nothing */ }
             | control_statement          { /* does nothing */ }
             | read_write_statement SEMI  { /* does nothing */ }
+            | continue_statement        { }
             | SEMI            { gen_nop_instruction(program); }
 ;
 
@@ -263,6 +267,17 @@ control_statement : if_statement         { /* does nothing */ }
 
 read_write_statement : read_statement  { /* does nothing */ }
                      | write_statement { /* does nothing */ }
+;
+
+continue_statement: CONTINUE
+            {
+                if(loop_nest == NULL) {
+                    printMessage("Need a loop");
+                    exit(-1);
+                }
+                t_axe_label *next_iter = loop_nest->data;
+                gen_bt_instruction(program,next_iter,0);
+            }
 ;
 
 assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp
@@ -380,9 +395,14 @@ while_statement  : WHILE
 
                      /* if `exp' returns FALSE, jump to the label $1.label_end */
                      gen_beq_instruction (program, $1.label_end, 0);
+                     
+                     loop_nest = addFirst(loop_nest,$1.label_condition);
+                     
                   }
                   code_block
                   {
+                      loop_nest = removeFirst(loop_nest);
+                      
                      /* jump to the beginning of the loop */
                      gen_bt_instruction
                            (program, $1.label_condition, 0);

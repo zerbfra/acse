@@ -1,0 +1,13 @@
+int a = 0;
+int sum = 0;
+while (a<20) {
+    a=a+1;
+    
+    if((a/2)*2 != a) {
+        continue;
+    }
+    
+    sum = sum+a;
+    write(sum);
+}
+
