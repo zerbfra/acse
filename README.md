@@ -14,7 +14,6 @@ To install the ACSE compiler type in the console: `make`
 
 To compile some examples (located in the directory ./tests) type: `make tests`
 
-
 In order to use the compiler/assembler/executor at first you have
 to export the directory ./bin in your current PATH as follows:
 ``export PATH=`pwd`/bin:$PATH``
