@@ -126,6 +126,15 @@ typedef struct t_foreach_statement {
 	t_axe_label * end;
 } t_foreach_statement;
 
+/* struttura per l'either stmt */
+
+typedef struct t_either_statement {
+    t_axe_label *either_label;
+    t_axe_label *or_label;
+    t_axe_label *on_label;
+    t_axe_label *end_label;
+} t_either_statement;
+
 /* create a label */
 extern t_axe_label * alloc_label(int value);
 

@@ -108,6 +108,7 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
    t_while_statement while_stmt;
    t_unless_statement unless_stmt;
    t_foreach_statement foreach_stmt;
+   t_either_statement either_stmt; /* dichiaro l'esistenza dell'either */
 } 
 /*=========================================================================
                                TOKENS 
@@ -134,6 +135,9 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token <unless_stmt> EVAL
 %token <label> UNLESS
 %token <foreach_stmt> FOR
+
+%token OR ON
+%token <either_stmt> EITHER
 
 %type <expr> exp
 %type <expr> assign_statement
@@ -258,11 +262,53 @@ control_statement : if_statement         { /* does nothing */ }
             | while_statement            { /* does nothing */ }
             | do_while_statement SEMI    { /* does nothing */ }
 			| foreach_statement			 { /* does nothing */ }
+            | either_statement           { /* does nothing */ } /*aggiunto nei controls */
             | return_statement SEMI      { /* does nothing */ }
 ;
 
 read_write_statement : read_statement  { /* does nothing */ }
                      | write_statement { /* does nothing */ }
+;
+
+
+/*** creo la grammatica */
+
+either_statement: EITHER
+            {
+                $1.or_label = newLabel(program);
+                $1.on_label = newLabel(program);
+                $1.end_label = newLabel(program);
+                
+                /* salto subito alla condizione di on */
+                gen_bt_instruction(program,$1.on_label,0);
+                /* blocco either */
+                $1.either_label = assignNewLabel(program);
+            } code_block OR
+            {
+                /* una volta eseguito vado alla fine */
+                gen_bt_instruction(program,$1.end_label,0);
+                /* assegno la label al blocco or */
+                assignLabel(program,$1.or_label);
+            } code_block {
+                /* va alla fine dopo esecuzione (OR) */
+                gen_bt_instruction(program,$1.end_label,0);
+                /* assegno ON label */
+                assignLabel(program,$1.on_label);
+            } ON exp {
+                if($9.expression_type == IMMEDIATE) {
+                    /* in base al valore vedo se jump a either o a or */
+                    t_axe_label *destination = $9.value ? $1.either_label : $1.or_label;
+                    gen_bt_instruction(program,destination,0);
+                } else {
+                    /* non è immediato */
+                    gen_andb_instruction(program,$9.value,$9.value,$9.value, CG_DIRECT_ALL);
+                    gen_bne_instruction(program,$1.either_label,0); /* not equal 0, jump su either */
+                    gen_bt_instruction(program,$1.or_label,0); /* se non ho jumpato prima, lo faccio ora su or */
+                    
+                }
+                
+                assignLabel(program,$1.end_label);
+            }
 ;
 
 assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp

@@ -1,0 +1,13 @@
+int a;
+int result;
+
+read(a);
+
+
+either {
+result = a + 10;
+} or {
+result = a + 20;
+} on a < 10
+write(result);
+
