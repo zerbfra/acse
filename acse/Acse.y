@@ -108,7 +108,7 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
    t_while_statement while_stmt;
    t_unless_statement unless_stmt;
    t_foreach_statement foreach_stmt;
-   t_either_statement either_stmt; /* dichiaro l'esistenza dell'either */
+   t_either_statement either_stmt; /* dichiaro l'esistenza dell'either, associo t_either_statement a either_stmt */
 } 
 /*=========================================================================
                                TOKENS 
@@ -136,8 +136,9 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token <label> UNLESS
 %token <foreach_stmt> FOR
 
-%token OR ON
-%token <either_stmt> EITHER
+%token OR
+%token ON
+%token <either_stmt> EITHER /* specifico che EITHER è un either stmt */
 
 %type <expr> exp
 %type <expr> assign_statement
@@ -275,14 +276,15 @@ read_write_statement : read_statement  { /* does nothing */ }
 
 either_statement: EITHER
             {
+                $1.either_label = newLabel(program);
                 $1.or_label = newLabel(program);
                 $1.on_label = newLabel(program);
                 $1.end_label = newLabel(program);
-                
+            
                 /* salto subito alla condizione di on */
                 gen_bt_instruction(program,$1.on_label,0);
                 /* blocco either */
-                $1.either_label = assignNewLabel(program);
+                assignLabel(program,$1.either_label);
             } code_block OR
             {
                 /* una volta eseguito vado alla fine */
