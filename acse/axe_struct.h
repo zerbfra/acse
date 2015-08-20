@@ -106,6 +106,14 @@ typedef struct t_axe_declaration
                            * or an empty string "") */
 } t_axe_declaration;
 
+/* aggiungo la struttura per gestire il cond */
+
+typedef struct t_cond_statement {
+    t_axe_label *label_next;
+    t_axe_label *label_end;
+} t_cond_statement;
+
+
 typedef struct t_while_statement
 {
    t_axe_label *label_condition;   /* this label points to the expression

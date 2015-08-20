@@ -90,6 +90,9 @@ t_reg_allocator *RA;       /* Register allocator. It implements the "Linear scan
 
 t_io_infos *file_infos;    /* input and output files used by the compiler */
 
+/* inserisco una condizione che mi dice se sono in un cond */
+t_list *condStack = NULL;
+
 %}
 
 %expect 1
@@ -108,6 +111,7 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
    t_while_statement while_stmt;
    t_unless_statement unless_stmt;
    t_foreach_statement foreach_stmt;
+   t_cond_statement *cond_stmt; /* DEVE ESSERE UN PUNTATORE PERCHE' LO METTO IN UNA LISTA */
 } 
 /*=========================================================================
                                TOKENS 
@@ -146,6 +150,10 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token <unless_stmt> EVAL
 %token <label> UNLESS
 %token <foreach_stmt> FOR
+
+%token <cond_stmt> COND
+%token DEFAULT
+%token CASE
 
 %type <expr> exp
 %type <expr> assign_statement
@@ -270,12 +278,68 @@ control_statement : if_statement         { /* does nothing */ }
             | while_statement            { /* does nothing */ }
             | do_while_statement SEMI    { /* does nothing */ }
 			| foreach_statement			 { /* does nothing */ }
+            | cond_statement             { /* does nothing */ } /*aggiunto anche ai controls*/
             | return_statement SEMI      { /* does nothing */ }
 ;
 
 read_write_statement : read_statement  { /* does nothing */ }
                      | write_statement { /* does nothing */ }
 ;
+
+/* Grammatiche per cond, case e default */
+
+cond_statement: COND LBRACE
+        {
+            $1->label_next = newLabel(program);
+            $1->label_end = newLabel(program);
+            
+            condStack = addFirst(condStack,$1);
+        } cond_block RBRACE {
+            assignLabel(program,$1->label_end);
+            condStack = removeFirst(condStack);
+        }
+;
+
+cond_block: case_statements { }
+            | case_statements default_statement {}
+;
+
+case_statements: case_statements case_statement
+                | case_statement
+;
+
+case_statement: CASE exp COLON
+        {
+            
+            /* carico il valore di exp */
+            if($2.expression_type == IMMEDIATE) {
+                gen_load_immediate(program,$2.value);
+            } else {
+                gen_andb_instruction(program,$2.value,$2.value,$2.value,CG_DIRECT_ALL);
+            }
+            // assegno la label next
+            t_axe_label *l = newLabel(program);
+            
+            t_cond_statement *firstCond = (t_cond_statement *)LDATA(getElementAt(condStack,0));
+            firstCond->label_next = l;
+            
+            gen_beq_instruction(program,l,0);
+            
+            
+        } statements
+        {
+            t_cond_statement *firstCond = (t_cond_statement *)LDATA(getElementAt(condStack,0));
+            gen_bt_instruction(program,firstCond->label_end,0);
+            assignLabel(program,firstCond->label_next);
+        }
+;
+
+default_statement: DEFAULT COLON
+        {
+        }
+        statements
+;
+
 
 assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp
             {

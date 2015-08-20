@@ -1,0 +1,11 @@
+int x,y;
+
+read(x);
+
+cond {
+    case x>0 : read(y);
+    default  : y = x;
+}
+
+write(x);
+write(y);
