@@ -101,6 +101,8 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
 "eval"            { return EVAL; }
 "unless"          { return UNLESS; }
 
+"after"           { return AFTER_OP; }
+
 {ID}              { yylval.svalue=strdup(yytext); return IDENTIFIER; }
 {DIGIT}+          { yylval.intval = atoi( yytext );
                     return(NUMBER); }

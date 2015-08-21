@@ -90,6 +90,10 @@ t_reg_allocator *RA;       /* Register allocator. It implements the "Linear scan
 
 t_io_infos *file_infos;    /* input and output files used by the compiler */
 
+unsigned int instr_countdown = 0;
+t_axe_label *after_stmt_return = NULL;
+t_axe_label *after_stmt_code = NULL;
+
 %}
 
 %expect 1
@@ -146,6 +150,8 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token <unless_stmt> EVAL
 %token <label> UNLESS
 %token <foreach_stmt> FOR
+
+%token <label> AFTER_OP;
 
 %type <expr> exp
 %type <expr> assign_statement
@@ -257,11 +263,32 @@ statements  : statements statement       { /* does nothing */ }
             | statement                  { /* does nothing */ }
 ;
 
+
+/** GRAMMATICA: IMPLICA DI RISCRIVERE statement **/
+
+statement: statement2
+        {
+            if(after_stmt_code != NULL && instr_countdown == 0) {
+                /* Ho raggiunto il countdown = 0 ed era in un after, salto nel codice dell'after */
+                gen_bt_instruction(program,after_stmt_code,0);
+                
+                // fisso la label per quel che segue lo statement corrente,
+                // cosi dopo aver eseguito il blocco di after so dove tornare
+                assignLabel(program,after_stmt_return);
+            }
+            /* in ogni caso decremento il countdown */
+            instr_countdown--;
+        }
+;
+
 /* A statement can be either an assignment statement or a control statement
  * or a read/write statement or a semicolon */
-statement   : assign_statement SEMI      { /* does nothing */ }
+
+/* Qui riscritto per aggiustarsi con l'after */
+statement2   : assign_statement SEMI      { /* does nothing */ }
             | control_statement          { /* does nothing */ }
             | read_write_statement SEMI  { /* does nothing */ }
+            | after_stmt                { /* does nothing */ }
             | SEMI            { gen_nop_instruction(program); }
 ;
 
@@ -275,6 +302,42 @@ control_statement : if_statement         { /* does nothing */ }
 
 read_write_statement : read_statement  { /* does nothing */ }
                      | write_statement { /* does nothing */ }
+;
+
+after_stmt: AFTER_OP exp DO
+            {
+                if($2.expression_type != IMMEDIATE || $2.value < 0) {
+                    printMessage("Positive immmediate expected");
+                    abort();
+                }
+                
+                /* controllo che non ce ne sia già un altro in pancia */
+                if(after_stmt_code != NULL) {
+                    printMessage("Only one after-do at time");
+                    abort();
+                }
+                
+                // creo la label per saltare il costrutto after
+                $1 = newLabel(program);
+                // salto alla fine dell'after-do, skippando tutto
+                gen_bt_instruction(program,$1,0);
+                
+                // assegno la label del codice
+                after_stmt_code = assignNewLabel(program);
+                
+            } code_block
+            {
+                instr_countdown = $2.value;
+                
+                // una volta eseguito il codice del blocco after devo tornare al codice
+                // che stavo eseguendo prima - dunque faccio un jump la
+                after_stmt_return = newLabel(program);
+                gen_bt_instruction(program, after_stmt_return,0);
+                
+                // assegno la label $1 al dopo after-do
+                assignLabel(program,$1);
+                
+            }
 ;
 
 assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp

@@ -1,0 +1,19 @@
+int a;
+int b;
+
+a = 0;
+b = 0;
+
+after 3 do {
+    a = 5;
+    b = 7;
+}
+
+while(a<10) {
+    a = a+1;
+}
+
+b = 1;
+
+write(a);
+write(b);
