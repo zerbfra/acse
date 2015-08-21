@@ -1,0 +1,8 @@
+int a,b,splice;
+
+read(a);
+read(b);
+
+splice = a $ b @ 16;
+
+write(splice);

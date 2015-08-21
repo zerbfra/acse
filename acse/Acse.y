@@ -147,6 +147,10 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token <label> UNLESS
 %token <foreach_stmt> FOR
 
+/* aggiungo i token */
+%token <label> DOLLAR
+%token <label> AT
+
 %type <expr> exp
 %type <expr> assign_statement
 %type <decl> declaration
@@ -166,6 +170,10 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %left AND_OP
 %left EQ NOTEQ
 %left LT GT LTEQ GTEQ
+
+/* precedenza */
+%left DOLLAR AT
+
 %left SHL_OP SHR_OP
 %left MINUS PLUS
 %left MUL_OP DIV_OP
@@ -617,6 +625,85 @@ exp: NUMBER      { $$ = create_expression ($1, IMMEDIATE); }
                                  (program, exp_r0, $2, SUB);
                         }
                      }
+
+
+    /* aggiungo l'espressione che mi serve per lo splice */
+    | exp DOLLAR exp AT exp
+                    {
+                        int e_c;
+                        /* controllo che sia immediato e che non sia minore di 0 */
+                        if($5.expression_type != IMMEDIATE) yyerror();
+                        if($5.value < 0) yyerror();
+                        
+                        // trovo e_c, ovvero dove eseguire il taglio
+                        if($5.value > 32) e_c = 0;
+                        else e_c = 32 - $5.value;
+                        
+                        // creo delle "maschere" per $1 e $3, parto da $3 (la seconda parte)
+                        int r_e2 = gen_load_immediate(program,0); // carico 0
+                        int r_index = gen_load_immediate(program,e_c); // di quanto devo shiftare
+                        
+                        $4 = newLabel(program);
+                        $2 = assignNewLabel(program); // qui è dove tornerò se non ho completato
+                        
+                        /* leggendo al contrario, questa è la prima del ciclo, 
+                         * di fatto, si controlla che la subi del contatore non sia andata a 0
+                         */
+                        gen_beq_instruction(program,$4,0);
+                        
+                        gen_shli_instruction(program,r_e2,r_e2,1); // shift a sinistra di 1
+                        gen_addi_instruction(program,r_e2,r_e2,1); // aggiungo 1
+                        
+                        // esempio con 16 come splice point
+                        // 0000 0000 0000 0000 0000 0000 0000 0000 --> primo giro (shift inutile su 0)
+                        // 0000 0000 0000 0000 0000 0000 0000 0001 --> ho aggiunto 1
+                        // 0000 0000 0000 0000 0000 0000 0000 0010 --> shift left
+                        // ... alla fine mi ritrovo con
+                        // 1111 1111 1111 1111 0000 0000 0000 0000
+                        // questa è la maschera per la prima parte: questa conserva, con un AND solo i primi 16 bit
+                        
+                        gen_subi_instruction(program,r_index,r_index,1); // tolgo 1 al contatore
+                        
+                        gen_bt_instruction(program,$2,0); // salto incondizionato alla label $2 per ripetere
+                        
+                        assignLabel(program,$4);
+              
+                        int r_e1 = getNewRegister(program);
+                        
+                        /* faccio la prima parte complementando quella che ho appena calcolato */
+                        gen_notb_instruction(program,r_e1,r_e2); // in pratica in r_e1 metto r_e2 complementato
+                        // ottengo: 0000 0000 0000 0000 1111 1111 1111 1111, che conserva solo gli ultimi 16 bit con un AND
+                        
+                        /* Adesso ho le due maschere r_e1 ed r_e2 */
+                        /* E' ora di caricare i valori delle due exp e mascherarli con un andb, per poi fare un orb */
+                        
+                        
+                        // carica il primo e ne fa l'ANDB con la maschera creata (r_e1)
+                        if ($1.expression_type == IMMEDIATE)
+                        // se immediato è da convertire in registro
+                            gen_andb_instruction(program, r_e1, r_e1, gen_load_immediate(program, $1.value), CG_DIRECT_ALL);
+                        else
+                            gen_andb_instruction(program, r_e1, r_e1, $1.value, CG_DIRECT_ALL);
+                        
+                        // carica il secondo e  ne fa l'ANDB con la maschera creata (r_e2)
+                        if ($3.expression_type == IMMEDIATE)
+                            gen_andb_instruction(program, r_e2, r_e2, gen_load_immediate(program, $3.value), CG_DIRECT_ALL);
+                        else
+                            gen_andb_instruction(program, r_e2, r_e2, $3.value, CG_DIRECT_ALL);
+                        
+                        // carico il risultato in r e lo mostro
+                        int r = getNewRegister(program);
+                        // con or, unisco le due parti, che saranno ad esempio:
+                        // 1111 1011 1011 1001 0000 0000 0000 0000 prima parte
+                        // 0000 0000 0000 0000 1111 0011 1001 1101 seconda parte
+                        // chiaramente con OR gli 0 che son usciti con le maschere
+                        // non hanno effetto e vengono ignorati
+                        
+                        gen_orb_instruction(program, r, r_e1, r_e2, CG_DIRECT_ALL);
+                        $$ = create_expression(r, REGISTER);
+                     
+                    }
+
 ;
 
 %%
