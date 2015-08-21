@@ -1,0 +1,10 @@
+int c;
+int l;
+
+c = 10;
+l = 2;
+
+loop_decreasing c by l {
+write(c);
+}
+while (1);

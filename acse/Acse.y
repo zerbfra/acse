@@ -108,6 +108,7 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
    t_while_statement while_stmt;
    t_unless_statement unless_stmt;
    t_foreach_statement foreach_stmt;
+   t_loop_decreasing_statement loop_decreasing_stmt;
 } 
 /*=========================================================================
                                TOKENS 
@@ -146,6 +147,10 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token <unless_stmt> EVAL
 %token <label> UNLESS
 %token <foreach_stmt> FOR
+
+/* aggiungo i token necessari */
+%token BY
+%token <loop_decreasing_stmt> LOOP_DECREASING
 
 %type <expr> exp
 %type <expr> assign_statement
@@ -271,10 +276,78 @@ control_statement : if_statement         { /* does nothing */ }
             | do_while_statement SEMI    { /* does nothing */ }
 			| foreach_statement			 { /* does nothing */ }
             | return_statement SEMI      { /* does nothing */ }
+
+            /** aggiunto ai control_statements: si noti come ci sia anche SEMI
+                perchè l'istruzione termina con un ; (dopo il while) */
+
+            | loop_decreasing_statement  SEMI { /* does nothing */ }
 ;
 
 read_write_statement : read_statement  { /* does nothing */ }
                      | write_statement { /* does nothing */ }
+;
+
+/* GRAMMATICA AGGIUNTIVA **/
+
+loop_decreasing_statement: LOOP_DECREASING IDENTIFIER
+            {
+                /* identifier sicuramente non è immediato
+                 * inoltre, è già istanziato nel programma, 
+                 * quindi lo vado a recuperare
+                 */
+                printMessage("Inzializzo");
+                int dec = get_symbol_location(program,$2,0);
+                gen_andb_instruction(program,dec,dec,dec,CG_DIRECT_ALL);
+                
+                /* istanzio le due label perchè mi servono per i branch
+                   le posizionerò in seguito nelle corrette posizioni */
+                $1.label_end = newLabel(program);
+                $1.label_body = newLabel(program);
+                
+                // ora, se dec è > 0 devo saltare al body
+                gen_bgt_instruction(program,$1.label_body,0);
+                // se non ho jumpato prima, vuol dire che è finito, vado alla fine
+                gen_bt_instruction(program,$1.label_end,0);
+                
+                $1.label_exp = assignNewLabel(program);
+            } BY exp {
+                // carico il valore da diminuire
+                int dec = get_symbol_location(program,$2,0);
+                // se immediato, tolgo la quantità da diminuire al valore dec
+                // altrimenti, si considera come register location
+                if($5.expression_type == IMMEDIATE) gen_subi_instruction(program,dec,dec,$5.value);
+                else gen_sub_instruction(program,dec,dec,$5.value,CG_DIRECT_ALL);
+                
+                // adesso che ho sottratto, vedo se saltare subito alla fine
+                // questo accade quando il risultato del valore è minore o uguale a 0
+                // in questo caso infatti non devo eseguire le istruzioni del code_block
+                gen_ble_instruction(program,$1.label_end,0);
+                
+                
+                
+                // assegno la label per il body
+                assignLabel(program,$1.label_body);
+            
+            } code_block WHILE LPAR exp RPAR
+            {
+                
+                printMessage("Body");
+                
+                // una volta terminato il tutto, devo valutare se ritornare alla label_exp
+                // per rieseguire le istruzioni del code_block
+                
+                if($10.expression_type == IMMEDIATE) {
+                    // se exp è vera devo rifare
+                    if($10.value) gen_bt_instruction(program,$1.label_exp,0);
+                } else {
+                    // non è immediato, dunque carico con andb
+                    gen_andb_instruction(program,$10.value,$10.value,$10.value,CG_DIRECT_ALL);
+                    // salto se necessario
+                    gen_bne_instruction(program,$1.label_exp,0);
+                }
+                
+                assignLabel(program,$1.label_end);
+            }
 ;
 
 assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp

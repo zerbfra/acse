@@ -106,6 +106,17 @@ typedef struct t_axe_declaration
                            * or an empty string "") */
 } t_axe_declaration;
 
+/* aggiungo una struct per gestire il loop_decreasing */
+
+typedef struct t_loop_decreasing_statement
+{
+    t_axe_label *label_body;
+    t_axe_label *label_end;
+    t_axe_label *label_exp;
+    
+} t_loop_decreasing_statement;
+
+
 typedef struct t_while_statement
 {
    t_axe_label *label_condition;   /* this label points to the expression
