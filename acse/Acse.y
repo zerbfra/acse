@@ -147,6 +147,10 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token <label> UNLESS
 %token <foreach_stmt> FOR
 
+/** aggiungo i token necessari */
+%token SHIP_OP
+%token IN_OP
+
 %type <expr> exp
 %type <expr> assign_statement
 %type <decl> declaration
@@ -165,7 +169,7 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %left OR_OP
 %left AND_OP
 %left EQ NOTEQ
-%left LT GT LTEQ GTEQ
+%left LT GT LTEQ GTEQ SHIP_OP IN_OP
 %left SHL_OP SHR_OP
 %left MINUS PLUS
 %left MUL_OP DIV_OP
@@ -617,6 +621,48 @@ exp: NUMBER      { $$ = create_expression ($1, IMMEDIATE); }
                                  (program, exp_r0, $2, SUB);
                         }
                      }
+    | exp SHIP_OP exp {
+                            /* gestisci 3 casi LT, GT, EQ, ritornano 1 o 0 a seconda del risultato */
+                            t_axe_expression lt = handle_binary_comparison(program,$1,$3,_LT_);
+                            t_axe_expression gt = handle_binary_comparison(program,$1,$3,_GT_);
+                            t_axe_expression eq = handle_binary_comparison(program,$1,$3,_EQ_);
+                            
+                            /* creo i risultati da fornire in output */
+                            
+                            t_axe_expression lt_r = create_expression(-1,IMMEDIATE);
+                            t_axe_expression gt_r = create_expression(1,IMMEDIATE);
+                            t_axe_expression eq_r = create_expression(0,IMMEDIATE);
+                            
+                            /* moltiplico i risultati per i casi */
+                            
+                            t_axe_expression lt_fact = handle_bin_numeric_op(program,lt,lt_r,MUL);
+                            t_axe_expression gt_fact = handle_bin_numeric_op(program,gt,gt_r,MUL);
+                            t_axe_expression eq_fact = handle_bin_numeric_op(program,eq,eq_r,MUL);
+                            
+                            /* trovo il risultato finale, facendo ADD tra tutti */
+                     
+                            t_axe_expression part = handle_bin_numeric_op(program,lt_fact,gt_fact,ADD);
+                            
+                            $$ = handle_bin_numeric_op(program,part,eq_fact,ADD);
+                            
+                            /** come avrei potuto fare la versione con degli if? posso mettere in if delle t_axe_expression? */
+                     
+                            
+        
+                      }
+    | exp IN_OP exp COLON exp %prec IN_OP {
+                            // $1 in $3:$5
+                            
+                            /* devono valere due relazioni, una >= e l'altra <= */
+                            t_axe_expression gt = handle_binary_comparison(program,$1,$3,_GTEQ_);
+                            t_axe_expression lt = handle_binary_comparison(program,$1,$5,_LTEQ_);
+                            
+                            /* quindi mi darà 1 sse entrambe sono vere */
+                            
+                            $$ = handle_bin_numeric_op(program,gt,lt,ANDB);
+        
+        
+                      }
 ;
 
 %%

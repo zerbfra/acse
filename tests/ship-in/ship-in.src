@@ -1,0 +1,10 @@
+int a;
+
+a = 20;
+
+write(a <=> 10);
+write(a <=> 20);
+write(a <=> 30);
+
+write(10 in 20:30);
+write(15 in 20:30);
