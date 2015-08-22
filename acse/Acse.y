@@ -136,6 +136,8 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token READ
 %token WRITE
 
+%token TEST
+
 %token <label> DO
 %token <while_stmt> WHILE
 %token <label> IF
@@ -262,6 +264,7 @@ statements  : statements statement       { /* does nothing */ }
 statement   : assign_statement SEMI      { /* does nothing */ }
             | control_statement          { /* does nothing */ }
             | read_write_statement SEMI  { /* does nothing */ }
+            | test_statement SEMI        { /* does nothing */ }
             | SEMI            { gen_nop_instruction(program); }
 ;
 
@@ -275,6 +278,15 @@ control_statement : if_statement         { /* does nothing */ }
 
 read_write_statement : read_statement  { /* does nothing */ }
                      | write_statement { /* does nothing */ }
+;
+
+test_statement: TEST LPAR exp RPAR
+            {
+                
+                /* USE THIS TO TEST SOMETHING */
+                
+                
+            }
 ;
 
 assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp
@@ -617,6 +629,7 @@ exp: NUMBER      { $$ = create_expression ($1, IMMEDIATE); }
                                  (program, exp_r0, $2, SUB);
                         }
                      }
+
 ;
 
 %%
