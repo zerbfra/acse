@@ -619,11 +619,11 @@ exp: NUMBER      { $$ = create_expression ($1, IMMEDIATE); }
                         }
                         else
                         {
-                           t_axe_expression exp_r0;
+                           t_axe_expression exp_r0 = create_expression(REG_0,REGISTER);
 
                            /* create an expression for regisrer REG_0 */
-                           exp_r0.value = REG_0;
-                           exp_r0.expression_type = REGISTER;
+                           //exp_r0.value = REG_0;
+                           //exp_r0.expression_type = REGISTER;
                            
                            $$ = handle_bin_numeric_op
                                  (program, exp_r0, $2, SUB);

@@ -1,4 +1,9 @@
+	.data
+L0 : 	.WORD 0
 	.text
-	ADDI R1 R2 #0
+	READ R1 0
+	MULI R2 R1 #5
+	STORE R1 L0
+	SUB R1 R0 R2
 	WRITE R1 0
 	HALT

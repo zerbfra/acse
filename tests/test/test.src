@@ -1,2 +1,5 @@
-test(4);
+int a;
 
+read(a);
+
+write(-a*5);

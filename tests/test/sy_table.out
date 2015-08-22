@@ -1,6 +1,7 @@
 --------------------------------
           SYMBOL TABLE
 --------------------------------
-NUMBER OF SYMBOLS : 0 
+NUMBER OF SYMBOLS : 1 
 --------------------------------
 
+ID : a	;; TYPE : INTEGER	;; LOCATION : R1 
