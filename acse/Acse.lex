@@ -89,6 +89,14 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
 "||"              { return OROR; }
 ","               { return COMMA; }
 
+"on"              { return ON; }
+"run"             { return RUN; }
+
+"nonzero"         { return NONZERO_FLAG; }
+"zero"            { return ZERO_FLAG; }
+"pos"             { return POS_FLAG; }
+"neg"             { return NEG_FLAG; }
+
 "do"              { return DO; }
 "else"            { return ELSE; }
 "for"             { return FOR; }

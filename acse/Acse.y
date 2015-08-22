@@ -147,6 +147,14 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token <label> UNLESS
 %token <foreach_stmt> FOR
 
+%token <label> ON
+%token RUN
+
+%token NONZERO_FLAG
+%token ZERO_FLAG
+%token POS_FLAG
+%token NEG_FLAG
+
 %type <expr> exp
 %type <expr> assign_statement
 %type <decl> declaration
@@ -270,11 +278,54 @@ control_statement : if_statement         { /* does nothing */ }
             | while_statement            { /* does nothing */ }
             | do_while_statement SEMI    { /* does nothing */ }
 			| foreach_statement			 { /* does nothing */ }
+            | on_flag_run                { /* does nothing */ } /* aggiunto ai control */
             | return_statement SEMI      { /* does nothing */ }
 ;
 
 read_write_statement : read_statement  { /* does nothing */ }
                      | write_statement { /* does nothing */ }
+;
+
+
+on_flag_run: ON NONZERO_FLAG RUN
+            {
+                $1 = newLabel(program);
+                /* se è = 0 salta */
+                gen_beq_instruction(program, $1, 0);
+                
+                
+            } code_block {
+                assignLabel(program,$1);
+            }
+            | ON ZERO_FLAG RUN
+            {
+                $1 = newLabel(program);
+                /* se è != 0 salta */
+                gen_bne_instruction(program, $1, 0);
+    
+            } code_block {
+                assignLabel(program,$1);
+            }
+            | ON POS_FLAG RUN
+            {
+                $1 = newLabel(program);
+                /* se è < 0 salta */
+                //gen_blt_instruction(program, $1, 0);
+                gen_bmi_instruction(program, $1, 0);
+    
+            } code_block {
+                assignLabel(program,$1);
+            }
+            | ON NEG_FLAG RUN
+            {
+                $1 = newLabel(program);
+                /* se è > 0 salta */
+                //gen_bgt_instruction(program, $1, 0);
+                gen_bpl_instruction(program, $1, 0);
+    
+            } code_block {
+                assignLabel(program,$1);
+            }
 ;
 
 assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp

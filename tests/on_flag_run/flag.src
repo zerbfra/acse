@@ -1,0 +1,11 @@
+int a,b;
+
+read(a);
+
+b = 5*a;
+
+on pos run {
+    write(b);
+}
+
+write(a);
