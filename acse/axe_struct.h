@@ -22,6 +22,7 @@
 #  define _AXE_FREE_FUNCTION free
 #endif
 
+
 typedef struct t_axe_label
 {
    int labelID;      /* label identifier */
@@ -105,6 +106,20 @@ typedef struct t_axe_declaration
    char *ID;              /* variable identifier (should never be a NULL pointer
                            * or an empty string "") */
 } t_axe_declaration;
+
+
+/** aggiungo la struttura per controllare l'if con ? */
+
+typedef struct t_shortif_statement {
+    
+    t_axe_label *label_false;
+    t_axe_label *label_end;
+    int result;
+    
+} t_shortif_statement;
+
+
+
 
 typedef struct t_while_statement
 {

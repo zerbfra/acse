@@ -1,0 +1,8 @@
+int a;
+int b;
+
+read(a);
+
+b = a<10 ? 5 : 10;
+
+write(b);

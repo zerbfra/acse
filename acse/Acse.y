@@ -108,6 +108,7 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
    t_while_statement while_stmt;
    t_unless_statement unless_stmt;
    t_foreach_statement foreach_stmt;
+   t_shortif_statement shortif_stmt;
 } 
 /*=========================================================================
                                TOKENS 
@@ -136,6 +137,8 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token READ
 %token WRITE
 
+%token <shortif_stmt> QUESTIONMARK
+
 %token <label> DO
 %token <while_stmt> WHILE
 %token <label> IF
@@ -158,6 +161,7 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
                           OPERATOR PRECEDENCES
  =========================================================================*/
 
+%right COLON QUESTIONMARK // associativi a destra e con priorità minima
 %left COMMA
 %left ASSIGN
 %left OROR
@@ -617,6 +621,39 @@ exp: NUMBER      { $$ = create_expression ($1, IMMEDIATE); }
                                  (program, exp_r0, $2, SUB);
                         }
                      }
+    /* Tratto lo short if come una espressione, cosi come spiegato nella consegna */
+    | exp QUESTIONMARK
+                    {
+                        $2.label_false = newLabel(program);
+                        $2.label_end = newLabel(program);
+                        $2.result = getNewRegister(program);
+                        
+                        if ($1.expression_type == IMMEDIATE) gen_load_immediate(program, $1.value);
+                        else gen_andb_instruction(program, $1.value,$1.value, $1.value, CG_DIRECT_ALL);
+                        
+                        /* se falso, vado a $1._label_false */
+                        gen_beq_instruction (program, $2.label_false, 0);
+                        
+                    } exp COLON {
+                        
+                        $2.result = $4.value;
+                        
+                        // se ho eseguito la condizione "vero", devo andare alla fine
+                        gen_bt_instruction(program,$2.label_end,0);
+                        
+                        assignLabel(program,$2.label_false);
+                    } exp {
+                        
+                        $2.result = $7.value;
+                        
+                        // assegno la label di fine
+                        assignLabel(program,$2.label_end);
+                        
+                        // sono arrivato alla fine, comunico risultato
+                        $$ = create_expression($2.result,REGISTER);
+                        
+                        
+                    }
 ;
 
 %%
