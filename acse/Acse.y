@@ -650,6 +650,27 @@ exp: NUMBER      { $$ = create_expression ($1, IMMEDIATE); }
                             
         
                       }
+
+    /* The %prec modifier declares the precedence of a particular rule by specifying a terminal symbol whose precedence should be used for that rule.
+     *  It's not necessary for that symbol to appear otherwise in the rule. The modifier's syntax is:
+     *  %prec terminal-symbol
+     *  and it is written after the components of the rule. Its effect is to assign the rule the precedence of terminal-symbol, overriding the precedence
+     * that would be deduced for it in the ordinary way. The altered rule precedence then affects how conflicts involving that rule are resolved (see section Operator Precedence).
+     *
+     * Here is how %prec solves the problem of unary minus. First, declare a precedence for a fictitious terminal symbol named UMINUS. 
+     * There are no tokens of this type, but the symbol serves to stand for its precedence:
+     *  ...
+     *  %left '+' '-'
+     *  %left '*'
+     *  %left UMINUS
+     *  
+     *  Now the precedence of UMINUS can be used in specific rules:
+     *
+     *  exp:    ...
+     *      | exp '-' exp
+     *      ...
+     *      | '-' exp %prec UMINUS
+     */
     | exp IN_OP exp COLON exp %prec IN_OP {
                             // $1 in $3:$5
                             
