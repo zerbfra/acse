@@ -106,6 +106,14 @@ typedef struct t_axe_declaration
                            * or an empty string "") */
 } t_axe_declaration;
 
+
+/* struct per gestire forall */
+
+typedef struct t_forall_statement {
+    t_axe_label *label_end;
+    t_axe_label *label_condition;
+} t_forall_statement;
+
 typedef struct t_while_statement
 {
    t_axe_label *label_condition;   /* this label points to the expression

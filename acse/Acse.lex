@@ -101,6 +101,12 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
 "eval"            { return EVAL; }
 "unless"          { return UNLESS; }
 
+"forall"          { return FORALL; }
+"to"              { return TO; }
+"downto"          { return DOWNTO; }
+"break"           { return BREAK; }
+"continue"        { return CONTINUE; }
+
 {ID}              { yylval.svalue=strdup(yytext); return IDENTIFIER; }
 {DIGIT}+          { yylval.intval = atoi( yytext );
                     return(NUMBER); }

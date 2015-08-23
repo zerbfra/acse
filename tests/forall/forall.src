@@ -1,0 +1,15 @@
+int a;
+int b;
+int i;
+
+read(a);
+read(b);
+
+
+
+forall (i = a + 1 downto b-1) {
+	write(i);
+    if(i == 10) break;
+}
+
+write(b);

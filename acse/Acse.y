@@ -90,6 +90,8 @@ t_reg_allocator *RA;       /* Register allocator. It implements the "Linear scan
 
 t_io_infos *file_infos;    /* input and output files used by the compiler */
 
+t_list *forall_loop_nest = NULL; /*indica se siamo o meno all'interno di un forall*/
+
 %}
 
 %expect 1
@@ -108,6 +110,7 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
    t_while_statement while_stmt;
    t_unless_statement unless_stmt;
    t_foreach_statement foreach_stmt;
+   t_forall_statement forall_stmt;
 } 
 /*=========================================================================
                                TOKENS 
@@ -135,6 +138,8 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token RETURN
 %token READ
 %token WRITE
+%token TO DOWNTO
+%token BREAK CONTINUE
 
 %token <label> DO
 %token <while_stmt> WHILE
@@ -143,9 +148,16 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token <intval> TYPE
 %token <svalue> IDENTIFIER
 %token <intval> NUMBER
+
+/* aggiungo i token */
+%token <forall_stmt> FORALL;
+
+
 %token <unless_stmt> EVAL
 %token <label> UNLESS
 %token <foreach_stmt> FOR
+
+
 
 %type <expr> exp
 %type <expr> assign_statement
@@ -153,6 +165,7 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %type <list> declaration_list
 %type <label> if_stmt
 %type <label> unless_statement
+%type <intval> forall_evolution
 
 /*=========================================================================
                           OPERATOR PRECEDENCES
@@ -270,12 +283,96 @@ control_statement : if_statement         { /* does nothing */ }
             | while_statement            { /* does nothing */ }
             | do_while_statement SEMI    { /* does nothing */ }
 			| foreach_statement			 { /* does nothing */ }
+            | forall_statement			 { /* does nothing */ } /*inserito tra i control_statements */
+            | break_statement			 { /* does nothing */ } /*inserito tra i control_statements */
             | return_statement SEMI      { /* does nothing */ }
 ;
 
 read_write_statement : read_statement  { /* does nothing */ }
                      | write_statement { /* does nothing */ }
 ;
+
+/*** FORALL STATEMENTS ***/
+
+forall_evolution: TO { $$ = 0; }
+                | DOWNTO { $$ = 1; }
+
+forall_statement : FORALL LPAR IDENTIFIER ASSIGN exp forall_evolution
+                {
+
+                    int vreg = get_symbol_location(program, $3, 0);
+                    if ($5.expression_type == IMMEDIATE)
+                        gen_addi_instruction(program, vreg, REG_0, $5.value);
+                    else
+                        gen_add_instruction(program, vreg, REG_0, $5.value,CG_DIRECT_ALL);
+
+                    $1.label_condition = assignNewLabel(program);
+                }
+                exp RPAR
+                {
+                    int vreg = get_symbol_location(program, $3, 0);
+                    t_axe_expression v = create_expression(vreg, REGISTER);
+                    
+                    // confronto v e $8, se sono uguali devo finire (label_end)
+                    t_axe_expression cmp = handle_binary_comparison(program,v,$8,_NOTEQ_);
+                    
+                    if(cmp.expression_type == IMMEDIATE)
+                        gen_load_immediate(program,cmp.value);
+                    else
+                        gen_andb_instruction(program,cmp.value,cmp.value,cmp.value,CG_DIRECT_ALL);
+                    
+                    $1.label_end = newLabel(program);
+                    
+                    /*
+                     In alternativa, si può, creare un nuovo intero, sul quale memorizzare l'informazione.
+                     Poi si può andare a sottrarre il valore di $8 a v, e verificare se il risultato è minore di 0.
+                
+                     int imm = getNewRegister(program);
+                     if($8.expression_type == IMMEDIATE) {
+                        gen_subi_instruction(program,imm,v.value,$8.value);
+                     }   else {
+                        gen_sub_instruction(program,imm,v.value,$8.value,CG_DIRECT_ALL);
+                     }
+                     gen_ble_instruction(program, $1.label_end, 0);
+                    */
+                    
+
+                    // se da 0, salto all'end
+                    gen_beq_instruction(program,$1.label_end,0);
+   
+                    // aggiungo questo al nesting
+                    forall_loop_nest = addFirst(forall_loop_nest, &$1);
+                }
+                code_block
+                {
+                   
+                    int vreg = get_symbol_location(program, $3, 0);
+                    
+                    // in base alla forall_evolution vedo se aggiungere o rimuovere a vreg
+                    if ($6 == 0)
+                        gen_addi_instruction(program, vreg, vreg, 1);
+                    else
+                        gen_subi_instruction(program, vreg, vreg, 1);
+                    gen_bt_instruction(program, $1.label_condition, 0);
+                    
+                    // assegno la fine
+                    assignLabel(program, $1.label_end);
+                    
+                    // rimuovo dal nesting
+                    forall_loop_nest = removeFirst(forall_loop_nest);
+                }
+;
+
+break_statement: BREAK
+                {
+                    if(forall_loop_nest == NULL) yyerror();
+                    
+                    t_forall_statement *stmt = (t_forall_statement*) getElementAt(forall_loop_nest,0)->data;
+                    
+                    gen_bt_instruction(program,stmt->label_end,0);
+                    
+                    
+                }
 
 assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp
             {
@@ -299,7 +396,7 @@ assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp
 			   free($1);
             }
 ;
-            
+
 if_statement   : if_stmt
                {
                   /* fix the `label_else' */
