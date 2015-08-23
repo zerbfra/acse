@@ -12,7 +12,7 @@ Una espressione può essere immediate oppure register. In particolare è immedia
 
 Posso poi creare un espressione passando un valore e il tipo:
 
-    t_axe_expression expr= create_expression(zero,IMMEDIATE|REGISTER);
+    t_axe_expression expr= create_expression(value,IMMEDIATE|REGISTER);
 
 Si noti come l'istruzione `int imm_register = gen_load_immediate(program, 1)` equivalga a:
 
@@ -52,6 +52,7 @@ t_axe_expression lt = handle_binary_comparison(program,$1,$3,_LT_); …come facc
 
 
 - Le istruzioni in `axe_gencode.h` danno risultato anche nell’output register e sono verificabili tramite gen_beq ecc per i branch, le altre, contenute in `axe_expression.h` si limitano a fare le operazioni di confronti e operazioni numeriche. 
+
 - In alcuni esempi (es: try catch) usa le strutture e scrive il metodo per crearle, in altre, come ad esempio lo switch, le strutture ci sono ma manca il metodo: spesso e volentieri, non è necessario scrivere il metodo che inizializza a NULL le labels della struct.
 
 - Nei tokens, alcuni sono preceduti dalla struttura che devono chiamare. 
