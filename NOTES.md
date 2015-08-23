@@ -7,7 +7,7 @@ Di seguito alcune note che ho preso durante lo studio di ACSE.
 Una espressione può essere immediate oppure register. In particolare è immediate quando il valore è immediato, altrimenti è register quando punta, con un identificatore, ad un registro.
 
     int zero = gen_load_immediate(0,IMMEDIATE);     // carico un IMMEDIATE, ritorna l'identificatore del registro
-    int one = getNewRegister(program);              // prende un nuovo registro dove salvarci int
+    int one = getNewRegister(program);              // prende un nuovo registro dove salvarci int, ritorna identificatore
     gen_addi_instruction(program, one, REG_0, 1);   // posso usarlo per inserirci valori
 
 Posso poi creare un espressione passando un valore e il tipo:
