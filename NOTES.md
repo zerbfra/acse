@@ -14,6 +14,8 @@ Posso poi creare un espressione passando un valore e il tipo:
 
     t_axe_expression expr= create_expression(value,IMMEDIATE|REGISTER);
 
+Una volta che ho creato l'espressione, posso recuperarne il valore facendo `exp.value`. Chiaramente, come detto prima, il valore può essere sia immediato che un identificatore di un registro.
+
 Si noti come l'istruzione `int imm_register = gen_load_immediate(program, 1)` equivalga a:
 
     int imm_register = getNewRegister(program);
