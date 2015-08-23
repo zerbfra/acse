@@ -1,0 +1,4 @@
+	.text
+	ADDI R1 R0 #20
+	WRITE R1 0
+	HALT

@@ -27,6 +27,12 @@ typedef struct t_axe_label
    int labelID;      /* label identifier */
 } t_axe_label;
 
+typedef struct t_axe_define
+{
+    char *name;
+    int value;
+} t_axe_define;
+
 typedef struct t_axe_register
 {
    int ID;        /* an identifier of the register */

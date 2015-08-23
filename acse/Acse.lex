@@ -25,6 +25,9 @@
 extern int line_num;
 extern int num_error;
 
+/* Variable declared for defines */
+extern t_list *defines;
+
 /* extern declaration of function yyerror */
 extern int yyerror(const char* errmsg);
 
@@ -101,7 +104,22 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
 "eval"            { return EVAL; }
 "unless"          { return UNLESS; }
 
-{ID}              { yylval.svalue=strdup(yytext); return IDENTIFIER; }
+"define"          { return DEFINE; }
+
+
+
+{ID}              {
+                    t_list *l;
+                    for(l=defines; l; l=LNEXT(l)) {
+                        t_axe_define *d = (t_axe_define*)(LDATA(l));
+                            if(strcmp(d->name,yytext) == 0) {
+                                yylval.intval = d->value;
+                                return NUMBER;
+                            }
+                    }
+                    yylval.svalue=strdup(yytext); return IDENTIFIER;
+                  }
+
 {DIGIT}+          { yylval.intval = atoi( yytext );
                     return(NUMBER); }
 

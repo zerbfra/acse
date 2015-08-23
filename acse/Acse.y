@@ -90,6 +90,8 @@ t_reg_allocator *RA;       /* Register allocator. It implements the "Linear scan
 
 t_io_infos *file_infos;    /* input and output files used by the compiler */
 
+t_list *defines = NULL;
+
 %}
 
 %expect 1
@@ -135,6 +137,8 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token RETURN
 %token READ
 %token WRITE
+
+%token DEFINE
 
 %token <label> DO
 %token <while_stmt> WHILE
@@ -182,7 +186,7 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
       2. A list of instructions. (at least one instruction!).
  * When the rule associated with the non-terminal `program' is executed,
  * the parser notify it to the `program' singleton instance. */
-program  : var_declarations statements
+program  : define_declarations var_declarations statements
          {
             /* Notify the end of the program. Once called
              * the function `set_end_Program' - if necessary -
@@ -193,6 +197,20 @@ program  : var_declarations statements
             /* return from yyparse() */
             YYACCEPT;
          }
+;
+
+define_declarations: define_declarations define_declaration { /*does nothing */ }
+                | /*empty*/ { /* does nothing */ }
+;
+
+define_declaration: DEFINE IDENTIFIER NUMBER
+                {
+                    t_axe_define *def = malloc(sizeof(t_axe_define));
+                    def->name = strdup($2);
+                    def->value = $3;
+                    
+                    defines = addFirst(defines,def);
+                }
 ;
 
 var_declarations : var_declarations var_declaration   { /* does nothing */ }
