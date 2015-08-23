@@ -6,9 +6,9 @@ Di seguito alcune note che ho preso durante lo studio di ACSE.
 
 Una espressione può essere immediate oppure register. In particolare è immediate quando il valore è immediato, altrimenti è register quando punta, con un identificatore, ad un registro.
 
-    int zero = gen_load_immediate(0,IMMEDIATE);     // creo un int IMMEDIATE
-    int one = getNewRegister(program);              // creo un int REGISTER
-    gen_addi_instruction(program, imm_register, REG_0, 1);  
+    int zero = gen_load_immediate(0,IMMEDIATE);     // carico un IMMEDIATE, ritorna l'identificatore del registro
+    int one = getNewRegister(program);              // prende un nuovo registro dove salvarci int
+    gen_addi_instruction(program, one, REG_0, 1);   // posso usarlo per inserirci valori
 
 Posso poi creare un espressione passando un valore e il tipo:
 
@@ -53,6 +53,7 @@ t_axe_expression lt = handle_binary_comparison(program,$1,$3,_LT_); …come facc
 
 - Le istruzioni in `axe_gencode.h` danno risultato anche nell’output register e sono verificabili tramite gen_beq ecc per i branch, le altre, contenute in `axe_expression.h` si limitano a fare le operazioni di confronti e operazioni numeriche. 
 - In alcuni esempi (es: try catch) usa le strutture e scrive il metodo per crearle, in altre, come ad esempio lo switch, le strutture ci sono ma manca il metodo: spesso e volentieri, non è necessario scrivere il metodo che inizializza a NULL le labels della struct.
+
 - Nei tokens, alcuni sono preceduti dalla struttura che devono chiamare. 
   Ad esempio, il WHILE ha in fronte <while_stmt> che va ad istanziare la relativa struttura. Ci si può referenziare a questa usando $1 nella grammatica, andando a recuperare le variabili della struttura stessa ($1 perchè, in questo caso, è il primo parametro). 
   Altre, ad esempio il DO, non hanno bisogno di una struttura complessa ma di una sola label, perciò si utilizza semplicemente <label> e ci si riferenzia ad essa come $1. Si può infatti creare con $1 = newLabel(program).
