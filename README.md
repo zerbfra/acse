@@ -8,6 +8,8 @@ ACSE was provided to students in "Formal Languages and Compilers (FLC)" course a
 
 You can navigate through the different branches of this repository to see the different exercises I made in order to prepare for the exam.
 
+Here are my notes: [Notes](NOTES.md)
+
 ## How to
 
 To install the ACSE compiler type in the console: `make`
