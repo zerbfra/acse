@@ -168,7 +168,7 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %left LT GT LTEQ GTEQ
 %left SHL_OP SHR_OP
 %left MINUS PLUS
-%left MUL_OP DIV_OP
+%left MUL_OP DIV_OP MOD_OP
 %right NOT
 
 /*=========================================================================
@@ -576,6 +576,21 @@ exp: NUMBER      { $$ = create_expression ($1, IMMEDIATE); }
    | exp DIV_OP exp     {
                            $$ = handle_bin_numeric_op(program, $1, $3, DIV);
    }
+
+   | exp MOD_OP exp  {
+       if($1.expression_type == IMMEDIATE && $3.expression_type == IMMEDIATE) {
+           $$ = create_expression($1.value % $3.value,IMMEDIATE);
+       } else {
+           t_axe_expression div = handle_bin_numeric_op(program,$1,$3, DIV);
+           t_axe_expression mul = handle_bin_numeric_op(program,div,$3, MUL);
+           
+           $$ = handle_bin_numeric_op(program,$1,mul,SUB);
+           
+           
+       }
+    
+    }
+
    | exp LT exp      {
                         $$ = handle_binary_comparison (program, $1, $3, _LT_);
    }

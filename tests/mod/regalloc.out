@@ -1,0 +1,24 @@
+
+
+*************************
+REGISTER ALLOCATION INFOS
+*************************
+AVAILABLE REGISTERS : 31 
+USED VARIABLES : 5 
+-------------------------
+LIVE_INTERVALS:
+	LIVE_INTERVAL of T1 : [0, 6] 
+	LIVE_INTERVAL of T2 : [1, 4] 
+	LIVE_INTERVAL of T3 : [2, 3] 
+	LIVE_INTERVAL of T4 : [3, 5] 
+	LIVE_INTERVAL of T5 : [5, 7] 
+-------------------------
+BINDINGS : 
+VAR T0 will be assigned to register R0 
+VAR T1 will be assigned to register R1 
+VAR T2 will be assigned to register R2 
+VAR T3 will be assigned to register R3 
+VAR T4 will be assigned to register R4 
+VAR T5 will be assigned to register R2 
+*************************
+
