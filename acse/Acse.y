@@ -107,7 +107,11 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
    t_axe_label *label;
    t_while_statement while_stmt;
    t_unless_statement unless_stmt;
-   t_foreach_statement foreach_stmt;
+   //t_foreach_statement foreach_stmt;
+   
+   /* aggiungo le due nuove struct */
+   t_for_statement for_stmt;
+   t_axe_expression_opt expr_opt;
 } 
 /*=========================================================================
                                TOKENS 
@@ -145,7 +149,9 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token <intval> NUMBER
 %token <unless_stmt> EVAL
 %token <label> UNLESS
-%token <foreach_stmt> FOR
+//%token <foreach_stmt> FOR
+
+%token <for_stmt> FOR
 
 %type <expr> exp
 %type <expr> assign_statement
@@ -153,6 +159,9 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %type <list> declaration_list
 %type <label> if_stmt
 %type <label> unless_statement
+
+/* aggiungo il tipo nuovo di espressioni opzionali */
+%type <expr_opt> exp_opt
 
 /*=========================================================================
                           OPERATOR PRECEDENCES
@@ -269,7 +278,8 @@ control_statement : if_statement         { /* does nothing */ }
 			| unless_statement			 { /* does nothing */ }
             | while_statement            { /* does nothing */ }
             | do_while_statement SEMI    { /* does nothing */ }
-			| foreach_statement			 { /* does nothing */ }
+			//| foreach_statement			 { /* does nothing */ }
+            | for_statement              { /* does nothing */ }
             | return_statement SEMI      { /* does nothing */ }
 ;
 
@@ -297,6 +307,72 @@ assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp
 					$$ = create_expression($3.value, REGISTER);
 			   }
 			   free($1);
+            }
+;
+
+assign_expr: IDENTIFIER ASSIGN exp {
+                int vreg = get_symbol_location(program,$1,0);
+                
+                if($3.expression_type == IMMEDIATE) {
+                    gen_addi_instruction(program,vreg,REG_0,$3.value);
+                } else {
+                    gen_add_instruction(program,vreg,REG_0,$3.value,CG_DIRECT_ALL);
+                }
+                
+                // non ho bisogno di richiamare $$ in quanto ho usato get_symbol_location
+            }
+;
+
+assign_list: assign_expr COMMA assign_list
+            | assign_expr
+;
+
+assign_list_opt: assign_list
+                | /* vuoto */
+;
+
+exp_opt : exp { $$.expr = $1; $$.empty = 0; }
+        | /** qui è vuota, empty a 1 */ { $$.empty = 1; }
+;
+
+for_statement: FOR LPAR assign_list_opt SEMI
+            {
+                $1.label_condition = assignNewLabel(program);
+            } exp_opt SEMI {
+                
+                $1.label_end = newLabel(program);
+                $1.label_body = newLabel(program);
+                $1.label_update = newLabel(program);
+                
+                if(!$6.empty) {
+                    if($6.expr.expression_type == IMMEDIATE) {
+                        gen_load_immediate(program,$6.expr.value);
+                    } else {
+                        gen_andb_instruction(program,$6.expr.value,$6.expr.value,$6.expr.value,CG_DIRECT_ALL);
+                    }
+                    
+                    // se è a 0, salto alla fine
+                    gen_beq_instruction(program,$1.label_end,0);
+                }
+                
+                // se non ho saltato, passo al body del ciclo (oppure se non cè $6
+                gen_bt_instruction(program,$1.label_body,0);
+                
+                assignLabel(program,$1.label_update);
+                
+            } assign_list_opt RPAR {
+                
+                // salto nuovamente alla condizione
+                gen_bt_instruction(program,$1.label_condition,0);
+                
+                // assegno la label body
+                assignLabel(program,$1.label_body);
+            } code_block {
+                
+                gen_bt_instruction(program,$1.label_update,0);
+                
+                // assegno la fine
+                assignLabel(program,$1.label_end);
             }
 ;
             
@@ -426,6 +502,7 @@ do_while_statement  : DO
                      }
 ;
 
+/*
 foreach_statement : FOR  
 			{
 				$1.counter = getNewRegister(program);
@@ -455,6 +532,7 @@ foreach_statement : FOR
 				assignLabel(program, $1.end);
 			}
 ;
+ */
 
 
 return_statement : RETURN

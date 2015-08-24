@@ -106,6 +106,18 @@ typedef struct t_axe_declaration
                            * or an empty string "") */
 } t_axe_declaration;
 
+typedef struct t_for_statement {
+    t_axe_label *label_condition;
+    t_axe_label *label_body;
+    t_axe_label *label_update;
+    t_axe_label *label_end;
+} t_for_statement;
+
+typedef struct t_axe_expression_opt {
+    t_axe_expression expr;
+    int empty;
+} t_axe_expression_opt;
+
 typedef struct t_while_statement
 {
    t_axe_label *label_condition;   /* this label points to the expression

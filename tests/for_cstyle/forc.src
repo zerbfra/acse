@@ -1,0 +1,13 @@
+int a;
+int b;
+int i;
+
+read(a);
+read(b);
+
+i = a;
+
+for(; i < b;) {
+    write(i);
+    i=i+1;
+}
