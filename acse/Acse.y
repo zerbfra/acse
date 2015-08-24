@@ -33,6 +33,9 @@
 #include "axe_reg_alloc.h"
 #include "reg_alloc_constants.h"
 #include "axe_io_manager.h"
+
+#include "axe_vec.h"
+
 #ifndef NDEBUG
 #  include "axe_debug.h"
 #endif
@@ -146,6 +149,9 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token <unless_stmt> EVAL
 %token <label> UNLESS
 %token <foreach_stmt> FOR
+
+%token VEC_ADD
+%token VEC_SUB
 
 %type <expr> exp
 %type <expr> assign_statement
@@ -262,6 +268,7 @@ statements  : statements statement       { /* does nothing */ }
 statement   : assign_statement SEMI      { /* does nothing */ }
             | control_statement          { /* does nothing */ }
             | read_write_statement SEMI  { /* does nothing */ }
+            | vec_statement SEMI         { /* does nothing */ }
             | SEMI            { gen_nop_instruction(program); }
 ;
 
@@ -275,6 +282,20 @@ control_statement : if_statement         { /* does nothing */ }
 
 read_write_statement : read_statement  { /* does nothing */ }
                      | write_statement { /* does nothing */ }
+;
+
+vec_statement: vec_add_statement { /* does nothing */ }
+            | vec_sub_statement { /* does nothing */ }
+;
+
+vec_add_statement: VEC_ADD LPAR IDENTIFIER COMMA IDENTIFIER COMMA IDENTIFIER RPAR {
+                    handle_vec_op(program,$3,$5,$7,VADD);
+            }
+;
+
+vec_sub_statement: VEC_SUB LPAR IDENTIFIER COMMA IDENTIFIER COMMA IDENTIFIER RPAR {
+                    handle_vec_op(program,$3,$5,$7,VSUB);
+            }
 ;
 
 assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp
