@@ -72,6 +72,9 @@ t_axe_expression lt = handle_binary_comparison(program,$1,$3,_LT_); …come facc
      t_axe_variable *id = getVariable(program,$1);
      id->isArray // è array o meno?
      id->arraySize // lunghezza array
+     
+     int element = loadArrayElement(program,array->ID,index_exp);
+     storeArrayElement(program,array->ID,index_exp,data_exp);
 
 #### Liste
 
