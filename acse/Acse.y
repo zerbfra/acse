@@ -262,6 +262,7 @@ statements  : statements statement       { /* does nothing */ }
 statement   : assign_statement SEMI      { /* does nothing */ }
             | control_statement          { /* does nothing */ }
             | read_write_statement SEMI  { /* does nothing */ }
+            | array_shift_statement SEMI  { /* does nothing */ }
             | SEMI            { gen_nop_instruction(program); }
 ;
 
@@ -275,6 +276,47 @@ control_statement : if_statement         { /* does nothing */ }
 
 read_write_statement : read_statement  { /* does nothing */ }
                      | write_statement { /* does nothing */ }
+;
+//11.30
+array_shift_statement: IDENTIFIER SHR_OP exp
+            {
+                t_axe_variable *id = getVariable(program,$1);
+                if(!id->isArray) {
+                    printMessage("Array expected");
+                    exit(-1);
+                }
+                
+                t_axe_expression e_zero = create_expression(0,IMMEDIATE);
+                t_axe_expression e_lenght = create_expression(id->arraySize,IMMEDIATE);
+                
+                // specchio su tutto l'array
+                mirrorArray(program,id,e_zero,e_lenght);
+                // specchio da 0 a x
+                mirrorArray(program,id,e_zero,$3);
+                // specchio da x alla fine dell'array
+                mirrorArray(program,id,$3,e_lenght);
+                
+            }
+            | IDENTIFIER SHL_OP exp
+            {
+                t_axe_variable *id = getVariable(program,$1);
+                if(!id->isArray) {
+                    printMessage("Array expected");
+                    exit(-1);
+                }
+                
+                t_axe_expression e_zero = create_expression(0,IMMEDIATE);
+                t_axe_expression e_lenght = create_expression(id->arraySize,IMMEDIATE);
+                // punto di taglio
+                t_axe_expression break_point = handle_bin_numeric_op(program,e_lenght,$3,SUB);
+                
+                // specchio su tutto l'array
+                mirrorArray(program,id,e_zero,e_lenght);
+                // specchio da 0 a lenght-x
+                mirrorArray(program,id,e_zero,break_point);
+                // specchio da lenght-x alla fine dell'array
+                mirrorArray(program,id,break_point,e_lenght);
+            }
 ;
 
 assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp

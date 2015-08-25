@@ -48,4 +48,9 @@ extern int loadArrayAddress(t_program_infos *program
 extern void storeArrayElement(t_program_infos *program, char *ID
             , t_axe_expression index, t_axe_expression data);
 
+
+/* Mirror array from start to end: parte della soluzione */
+extern void mirrorArray(t_program_infos *program, t_axe_variable *array
+                              , t_axe_expression start, t_axe_expression end);
+
 #endif

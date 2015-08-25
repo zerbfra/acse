@@ -1,0 +1,117 @@
+
+
+*************************
+REGISTER ALLOCATION INFOS
+*************************
+AVAILABLE REGISTERS : 31 
+USED VARIABLES : 52 
+-------------------------
+LIVE_INTERVALS:
+	LIVE_INTERVAL of T1 : [0, 2] 
+	LIVE_INTERVAL of T2 : [1, 2] 
+	LIVE_INTERVAL of T3 : [3, 6] 
+	LIVE_INTERVAL of T4 : [5, 6] 
+	LIVE_INTERVAL of T5 : [7, 10] 
+	LIVE_INTERVAL of T6 : [9, 10] 
+	LIVE_INTERVAL of T7 : [11, 14] 
+	LIVE_INTERVAL of T8 : [13, 14] 
+	LIVE_INTERVAL of T9 : [15, 18] 
+	LIVE_INTERVAL of T10 : [17, 18] 
+	LIVE_INTERVAL of T11 : [19, 22] 
+	LIVE_INTERVAL of T12 : [21, 22] 
+	LIVE_INTERVAL of T13 : [23, 42] 
+	LIVE_INTERVAL of T14 : [24, 42] 
+	LIVE_INTERVAL of T15 : [26, 26] 
+	LIVE_INTERVAL of T16 : [28, 30] 
+	LIVE_INTERVAL of T17 : [30, 39] 
+	LIVE_INTERVAL of T18 : [31, 33] 
+	LIVE_INTERVAL of T19 : [33, 36] 
+	LIVE_INTERVAL of T20 : [34, 36] 
+	LIVE_INTERVAL of T21 : [37, 39] 
+	LIVE_INTERVAL of T22 : [43, 62] 
+	LIVE_INTERVAL of T23 : [44, 62] 
+	LIVE_INTERVAL of T24 : [46, 46] 
+	LIVE_INTERVAL of T25 : [48, 50] 
+	LIVE_INTERVAL of T26 : [50, 59] 
+	LIVE_INTERVAL of T27 : [51, 53] 
+	LIVE_INTERVAL of T28 : [53, 56] 
+	LIVE_INTERVAL of T29 : [54, 56] 
+	LIVE_INTERVAL of T30 : [57, 59] 
+	LIVE_INTERVAL of T31 : [63, 82] 
+	LIVE_INTERVAL of T32 : [64, 82] 
+	LIVE_INTERVAL of T33 : [66, 66] 
+	LIVE_INTERVAL of T34 : [68, 70] 
+	LIVE_INTERVAL of T35 : [70, 79] 
+	LIVE_INTERVAL of T36 : [71, 73] 
+	LIVE_INTERVAL of T37 : [73, 76] 
+	LIVE_INTERVAL of T38 : [74, 76] 
+	LIVE_INTERVAL of T39 : [77, 79] 
+	LIVE_INTERVAL of T40 : [83, 84] 
+	LIVE_INTERVAL of T41 : [84, 85] 
+	LIVE_INTERVAL of T42 : [86, 88] 
+	LIVE_INTERVAL of T43 : [88, 89] 
+	LIVE_INTERVAL of T44 : [90, 92] 
+	LIVE_INTERVAL of T45 : [92, 93] 
+	LIVE_INTERVAL of T46 : [94, 96] 
+	LIVE_INTERVAL of T47 : [96, 97] 
+	LIVE_INTERVAL of T48 : [98, 100] 
+	LIVE_INTERVAL of T49 : [100, 101] 
+	LIVE_INTERVAL of T50 : [102, 104] 
+	LIVE_INTERVAL of T51 : [104, 105] 
+-------------------------
+BINDINGS : 
+VAR T0 will be assigned to register R0 
+VAR T1 will be assigned to register R1 
+VAR T2 will be assigned to register R2 
+VAR T3 will be assigned to register R1 
+VAR T4 will be assigned to register R2 
+VAR T5 will be assigned to register R1 
+VAR T6 will be assigned to register R2 
+VAR T7 will be assigned to register R1 
+VAR T8 will be assigned to register R2 
+VAR T9 will be assigned to register R1 
+VAR T10 will be assigned to register R2 
+VAR T11 will be assigned to register R1 
+VAR T12 will be assigned to register R2 
+VAR T13 will be assigned to register R1 
+VAR T14 will be assigned to register R2 
+VAR T15 will be assigned to register R3 
+VAR T16 will be assigned to register R3 
+VAR T17 will be assigned to register R4 
+VAR T18 will be assigned to register R3 
+VAR T19 will be assigned to register R5 
+VAR T20 will be assigned to register R3 
+VAR T21 will be assigned to register R5 
+VAR T22 will be assigned to register R1 
+VAR T23 will be assigned to register R2 
+VAR T24 will be assigned to register R4 
+VAR T25 will be assigned to register R4 
+VAR T26 will be assigned to register R5 
+VAR T27 will be assigned to register R4 
+VAR T28 will be assigned to register R3 
+VAR T29 will be assigned to register R4 
+VAR T30 will be assigned to register R3 
+VAR T31 will be assigned to register R1 
+VAR T32 will be assigned to register R2 
+VAR T33 will be assigned to register R5 
+VAR T34 will be assigned to register R5 
+VAR T35 will be assigned to register R3 
+VAR T36 will be assigned to register R5 
+VAR T37 will be assigned to register R4 
+VAR T38 will be assigned to register R5 
+VAR T39 will be assigned to register R4 
+VAR T40 will be assigned to register R1 
+VAR T41 will be assigned to register R2 
+VAR T42 will be assigned to register R2 
+VAR T43 will be assigned to register R1 
+VAR T44 will be assigned to register R1 
+VAR T45 will be assigned to register R2 
+VAR T46 will be assigned to register R2 
+VAR T47 will be assigned to register R1 
+VAR T48 will be assigned to register R1 
+VAR T49 will be assigned to register R2 
+VAR T50 will be assigned to register R2 
+VAR T51 will be assigned to register R1 
+VAR T52 will be assigned to register R0 
+*************************
+

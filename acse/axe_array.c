@@ -13,6 +13,86 @@
 #include "axe_utils.h"
 #include "axe_errors.h"
 
+// mirrorArray è metodo che "specchia" un array, a partire da start fino a end
+void mirrorArray(t_program_infos *program, t_axe_variable *array , t_axe_expression start, t_axe_expression end) {
+    
+    int index_from,index_to;
+    t_axe_expression index_from_exp,index_to_exp;
+    
+    t_axe_label *condition_label, *end_label;
+    
+    condition_label = newLabel(program);
+    end_label = newLabel(program);
+    
+    int result;
+    
+    // valori temporanei
+    int data_from_temp, data_to_temp;
+    t_axe_expression data_from_temp_exp,data_to_temp_exp;
+    
+    /* load starting point */
+    if(start.expression_type == IMMEDIATE) {
+        index_from = gen_load_immediate(program,start.value);
+    } else {
+        // devo creare un registro sul quale memorizzare
+        index_from = getNewRegister(program);
+        index_from = gen_andb_instruction(program,index_from,start.value,start.value,CG_DIRECT_ALL);
+    }
+    
+    index_from_exp = create_expression(index_from,REGISTER);
+    
+    /* load end point (last element = size -1) */
+    
+    if(end.expression_type == IMMEDIATE) {
+        index_to = gen_load_immediate(program,end.value);
+    } else {
+        // devo creare un registro sul quale memorizzare
+        index_to = getNewRegister(program);
+        index_to = gen_andb_instruction(program,index_to,end.value,end.value,CG_DIRECT_ALL);
+    }
+    
+    index_to_exp = create_expression(index_to,REGISTER);
+    
+    // togli 1 dalla size
+    gen_subi_instruction(program,index_to,index_to,1);
+    
+    
+    /** SWAPPING ALGORITHM **/
+    assignLabel(program,condition_label);
+    
+    result = getNewRegister(program);
+    gen_sub_instruction(program,result,index_to,index_from,CG_DIRECT_ALL);
+    
+    // se <= 0 termino
+    gen_ble_instruction(program,end_label,0);
+    
+    /* Swap */
+    
+    // salvo data from
+    data_from_temp = loadArrayElement(program,array->ID,index_from_exp);
+    data_from_temp_exp = create_expression(data_from_temp,REGISTER);
+    
+    // salvo data to
+    data_to_temp = loadArrayElement(program,array->ID,index_to_exp);
+    data_to_temp_exp = create_expression(data_to_temp,REGISTER);
+    
+    // scambio i valori nell'array scambiandoli
+    storeArrayElement(program,array->ID,index_from_exp,data_to_temp_exp);
+    storeArrayElement(program,array->ID,index_to_exp,data_from_temp_exp);
+    
+    /* Update indices */
+    
+    gen_addi_instruction(program,index_from,index_from,1);
+    gen_subi_instruction(program,index_to,index_to,1);
+    
+    // salto sempre e comunque alla condizione
+    gen_bt_instruction(program,condition_label,0);
+    
+    // end
+    assignLabel(program,end_label);
+    
+}
+
 void storeArrayElement(t_program_infos *program, char *ID
             , t_axe_expression index, t_axe_expression data)
 {
