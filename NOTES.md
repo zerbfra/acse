@@ -62,6 +62,17 @@ t_axe_expression lt = handle_binary_comparison(program,$1,$3,_LT_); …come facc
   Altre, ad esempio il DO, non hanno bisogno di una struttura complessa ma di una sola label, perciò si utilizza semplicemente <label> e ci si riferenzia ad essa come $1. Si può infatti creare con $1 = newLabel(program).
   Altre ancora, non hanno nessuna "entità" in fronte: questo perchè non necessitanodi label per fare dei jump o simili (esempio: RETURN, WRITE...)
 
+#### Espressioni
+
+     t_axe_expression e_zero = create_expression(0,IMMEDIATE);
+     t_axe_expression e_lenght = create_expression(id->arraySize,IMMEDIATE);
+     
+#### Array
+
+     t_axe_variable *id = getVariable(program,$1);
+     id->isArray // è array o meno?
+     id->arraySize // lunghezza array
+
 #### Liste
 
     t_forall_statement *stmt = (t_forall_statement*) getElementAt(forall_loop_nest,0)->data; 
