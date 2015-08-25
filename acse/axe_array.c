@@ -16,91 +16,107 @@
 
 void rotateArray(t_program_infos *program, t_axe_variable *array, t_axe_expression displacement, int dir) {
     
-    int disp,index;
-    
-    int index_last; // posizione ultimo elemento
-    int data; // contiene l'elemento corrente
-    
+    /* variabili ciclo esterno */
     t_axe_label *condition_loop = newLabel(program);
     t_axe_label *end_loop = newLabel(program);
+    int index_last; // posizione dell'ultimo elemento
+    int disp;
+    int size;
     
+    /* variabili ciclo interno */
+    int index;
+    int data;
     t_axe_expression index_exp,data_exp;
     
+    /************* LOGICA *****************/
     
-    // carico la lunghezza in l come immediato
-    int size = gen_load_immediate(program,array->arraySize);
+    // carico la lunghezza dell'array come immediato
+    size = gen_load_immediate(program,array->arraySize);
     
+    // carico la lunghezza, in index_last, per poi togliere 1 ed ottenere indice ultima cella
     index_last = gen_load_immediate(program,array->arraySize);
     gen_subi_instruction(program,index_last,index_last,1);
     
     // last_exp ora contiene l'indice dell'ultima cella dell'array
     t_axe_expression last_exp = create_expression(index_last,REGISTER);
     
-    // carico disp
+    // carico displacement (di quanto spostare tutti gli elementi)
     if(displacement.expression_type == IMMEDIATE) {
         disp = gen_load_immediate(program,displacement.value);
     } else {
         disp = getNewRegister(program);
         disp = gen_andb_instruction(program,disp,displacement.value,displacement.value,CG_DIRECT_ALL);
     }
+    // genero exp per il displacement
     t_axe_expression disp_exp = create_expression(disp,REGISTER);
 
 
+    /***** INZIO CICLO ESTERNO ***/
     
-    // per conteggiare i cicli che portano il displacement a 0
-    assignLabel(program,condition_loop);
-    
-    // se il disp è 0<= finisco
-    gen_ble_instruction(program,end_loop,0);
-    
-    
-    
-
-    
-        // carico il primo elemento dell'array, me lo salvo altrimenti andrebbe perso!
+        // inizio ciclo esterno (conta displacement da valore attuale fino a 0, decrementando)
+        assignLabel(program,condition_loop);
+        
+        // se il disp è 0<= FINISCO! e mando su end_loop
+        gen_ble_instruction(program,end_loop,0);
+        
+        
+        // salvo array[0], altrimenti andrebbe perso!
         t_axe_expression index_0 = create_expression(0,IMMEDIATE);
-        int first_element = loadArrayElement(program,array->ID,index_0);
-        t_axe_expression first_element_exp = create_expression(first_element,REGISTER);
-    
+        int element_0 = loadArrayElement(program,array->ID,index_0);
+        t_axe_expression element_0_exp = create_expression(element_0,REGISTER);
+
         // fisso index a 1 (elemento 0 è già stato memorizzato)
         index = gen_load_immediate(program,1);
         index_exp = create_expression(index,REGISTER);
 
-        ///// INIZIO LOOP INTERNO
-        t_axe_label *end = newLabel(program);
-        t_axe_label *condition = assignNewLabel(program);
-    
-        data = loadArrayElement(program,array->ID,index_exp);
-        data_exp = create_expression(data,REGISTER);
-        gen_subi_instruction(program,index,index,1);
-        storeArrayElement(program,array->ID,index_exp,data_exp);
-    
-        gen_addi_instruction(program,index,index,2);
-    
-        int result = getNewRegister(program);
-        gen_sub_instruction(program,result,index,size,CG_DIRECT_ALL);
-    
-        gen_beq_instruction(program,end,0);
-        gen_bt_instruction(program,condition,0);
-    
-        assignLabel(program,end);
-        /// FINE LOOP INTERNO
-    
-    
-    
+        /***** CICLO INTERNO *******/
+        
+            t_axe_label *end = newLabel(program);
+            
+            // assegno la label per ritornare qua
+            t_axe_label *condition = assignNewLabel(program);
+            
+            // carico il dato dall'index corrente
+            data = loadArrayElement(program,array->ID,index_exp);
+            data_exp = create_expression(data,REGISTER);
+            
+            // per copiare il dato array[index] ad array[index-1] (scalano tutti verso sx: shift rotate sx)
+            gen_subi_instruction(program,index,index,1);
+            
+            // salvo data in array[index-1]
+            storeArrayElement(program,array->ID,index_exp,data_exp);
+            
+            // aggiungo +2: +1 per avanzamento indice, +1 perchè ho fatto la subi per ottere index-1
+            gen_addi_instruction(program,index,index,2);
+
+            // valuto se index è arrivato alla dimensione dell'array, sottraggo:
+            int result = getNewRegister(program);
+            gen_sub_instruction(program,result,index,size,CG_DIRECT_ALL);
+            
+            // se result = size-index = 0, allora vado alla fine (index=size, ho finito!)
+            gen_beq_instruction(program,end,0);
+            
+            // altrimenti, torno alla condizione
+            gen_bt_instruction(program,condition,0);
+
+            assignLabel(program,end);
+        
+        /***** FINE CICLO INTERNO *******/
+        
+
         // metto quello che era il primo alla fine
-        storeArrayElement(program,array->ID,last_exp,first_element_exp);
+        storeArrayElement(program,array->ID,last_exp,element_0_exp);
 
+        
+        // tolgo 1 al displacement, perchè un ciclo di spostamenti è fatto
+        gen_subi_instruction(program,disp,disp,1);
+        
+        // torno alla condizione
+        gen_bt_instruction(program,condition_loop,0);
     
-
-    
-    // tolgo 1 al displacement, perchè un ciclo di spostamenti è fatto
-    gen_subi_instruction(program,disp,disp,1);
-    // torno alla condizione
-    gen_bt_instruction(program,condition_loop,0);
+    /***** FINE CICLO ESTERNO ***/
     
     assignLabel(program,end_loop);
-    
     
 }
 
