@@ -18,23 +18,23 @@ void rotateArray(t_program_infos *program, t_axe_variable *array, t_axe_expressi
     
     int disp,index;
     
-    int last_element; // posizione ultimo elemento
+    int index_last; // posizione ultimo elemento
     int data; // contiene l'elemento corrente
     
     t_axe_label *condition_loop = newLabel(program);
     t_axe_label *end_loop = newLabel(program);
     
-     t_axe_expression index_exp,data_exp;
+    t_axe_expression index_exp,data_exp;
     
     
-    // lunghezza array
-    t_axe_expression lenght = create_expression(array->arraySize,IMMEDIATE);
-
-    last_element = gen_load_immediate(program,lenght.value);
-    gen_subi_instruction(program,last_element,last_element,1);
+    // carico la lunghezza in l come immediato
+    int size = gen_load_immediate(program,array->arraySize);
+    
+    index_last = gen_load_immediate(program,array->arraySize);
+    gen_subi_instruction(program,index_last,index_last,1);
     
     // last_exp ora contiene l'indice dell'ultima cella dell'array
-    t_axe_expression last_exp = create_expression(last_element,REGISTER);
+    t_axe_expression last_exp = create_expression(index_last,REGISTER);
     
     // carico disp
     if(displacement.expression_type == IMMEDIATE) {
@@ -67,6 +67,8 @@ void rotateArray(t_program_infos *program, t_axe_variable *array, t_axe_expressi
         index_exp = create_expression(index,REGISTER);
 
         ///// INIZIO LOOP INTERNO
+        t_axe_label *end = newLabel(program);
+        t_axe_label *condition = assignNewLabel(program);
     
         data = loadArrayElement(program,array->ID,index_exp);
         data_exp = create_expression(data,REGISTER);
@@ -75,36 +77,13 @@ void rotateArray(t_program_infos *program, t_axe_variable *array, t_axe_expressi
     
         gen_addi_instruction(program,index,index,2);
     
-    data = loadArrayElement(program,array->ID,index_exp);
-    data_exp = create_expression(data,REGISTER);
-    gen_subi_instruction(program,index,index,1);
-    storeArrayElement(program,array->ID,index_exp,data_exp);
+        int result = getNewRegister(program);
+        gen_sub_instruction(program,result,index,size,CG_DIRECT_ALL);
     
-    gen_addi_instruction(program,index,index,2);
+        gen_beq_instruction(program,end,0);
+        gen_bt_instruction(program,condition,0);
     
-    data = loadArrayElement(program,array->ID,index_exp);
-    data_exp = create_expression(data,REGISTER);
-    gen_subi_instruction(program,index,index,1);
-    storeArrayElement(program,array->ID,index_exp,data_exp);
-    
-    gen_addi_instruction(program,index,index,2);
-    
-    data = loadArrayElement(program,array->ID,index_exp);
-    data_exp = create_expression(data,REGISTER);
-    gen_subi_instruction(program,index,index,1);
-    storeArrayElement(program,array->ID,index_exp,data_exp);
-    
-    gen_addi_instruction(program,index,index,2);
-    
-    data = loadArrayElement(program,array->ID,index_exp);
-    data_exp = create_expression(data,REGISTER);
-    gen_subi_instruction(program,index,index,1);
-    storeArrayElement(program,array->ID,index_exp,data_exp);
-    
-    gen_addi_instruction(program,index,index,2);
-    
-
-    
+        assignLabel(program,end);
         /// FINE LOOP INTERNO
     
     
