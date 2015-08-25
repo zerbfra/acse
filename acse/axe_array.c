@@ -18,14 +18,23 @@ void rotateArray(t_program_infos *program, t_axe_variable *array, t_axe_expressi
     
     int disp,index;
     
+    int last_element; // posizione ultimo elemento
+    int data; // contiene l'elemento corrente
+    
     t_axe_label *condition_loop = newLabel(program);
     t_axe_label *end_loop = newLabel(program);
     
+     t_axe_expression index_exp,data_exp;
+    
     
     // lunghezza array
-    t_axe_expression lenght = create_expression(array->arraySize,REGISTER);
-    // tolgo 1 alla lunghezza (mi da ultimo elemento)
-    gen_subi_instruction(program,lenght.value,lenght.value,1);
+    t_axe_expression lenght = create_expression(array->arraySize,IMMEDIATE);
+
+    last_element = gen_load_immediate(program,lenght.value);
+    gen_subi_instruction(program,last_element,last_element,1);
+    
+    // last_exp ora contiene l'indice dell'ultima cella dell'array
+    t_axe_expression last_exp = create_expression(last_element,REGISTER);
     
     // carico disp
     if(displacement.expression_type == IMMEDIATE) {
@@ -55,33 +64,53 @@ void rotateArray(t_program_infos *program, t_axe_variable *array, t_axe_expressi
     
         // fisso index a 1 (elemento 0 è già stato memorizzato)
         index = gen_load_immediate(program,1);
-    
+        index_exp = create_expression(index,REGISTER);
+
         ///// INIZIO LOOP INTERNO
-        t_axe_label *condition = assignNewLabel(program);
     
-        t_axe_expression index_expr = create_expression(index,REGISTER);
+        data = loadArrayElement(program,array->ID,index_exp);
+        data_exp = create_expression(data,REGISTER);
+        gen_subi_instruction(program,index,index,1);
+        storeArrayElement(program,array->ID,index_exp,data_exp);
     
-        int element = loadArrayElement(program,array->ID,index_expr); // posizione corrente (index)
-        t_axe_expression element_exp = create_expression(element,REGISTER);
+        gen_addi_instruction(program,index,index,2);
     
-        gen_subi_instruction(program,index,index,1);            // posizione precedente (index-1)
-        storeArrayElement(program,array->ID,index_expr,element_exp); // salvo in index-1 quello che è a index
+    data = loadArrayElement(program,array->ID,index_exp);
+    data_exp = create_expression(data,REGISTER);
+    gen_subi_instruction(program,index,index,1);
+    storeArrayElement(program,array->ID,index_exp,data_exp);
+    
+    gen_addi_instruction(program,index,index,2);
+    
+    data = loadArrayElement(program,array->ID,index_exp);
+    data_exp = create_expression(data,REGISTER);
+    gen_subi_instruction(program,index,index,1);
+    storeArrayElement(program,array->ID,index_exp,data_exp);
+    
+    gen_addi_instruction(program,index,index,2);
+    
+    data = loadArrayElement(program,array->ID,index_exp);
+    data_exp = create_expression(data,REGISTER);
+    gen_subi_instruction(program,index,index,1);
+    storeArrayElement(program,array->ID,index_exp,data_exp);
+    
+    gen_addi_instruction(program,index,index,2);
+    
+    data = loadArrayElement(program,array->ID,index_exp);
+    data_exp = create_expression(data,REGISTER);
+    gen_subi_instruction(program,index,index,1);
+    storeArrayElement(program,array->ID,index_exp,data_exp);
+    
+    gen_addi_instruction(program,index,index,2);
+    
 
-        gen_addi_instruction(program,index,index,2); // proseguo (ero tornato indietro di 1 quindi +2)
-
-        // se lenght-index <= 0 devo finire (ho finito array)
-    
-        t_axe_label *end = newLabel(program);
-        gen_bge_instruction(program,end,lenght.value);
-        // altrimenti torno alla condizione
-        gen_bt_instruction(program,condition,0);
     
         /// FINE LOOP INTERNO
     
-        assignLabel(program,end);
+    
     
         // metto quello che era il primo alla fine
-        storeArrayElement(program,array->ID,lenght,first_element_exp);
+        storeArrayElement(program,array->ID,last_exp,first_element_exp);
 
     
 
