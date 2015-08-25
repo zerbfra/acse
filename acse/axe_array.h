@@ -48,4 +48,9 @@ extern int loadArrayAddress(t_program_infos *program
 extern void storeArrayElement(t_program_infos *program, char *ID
             , t_axe_expression index, t_axe_expression data);
 
+/* ruota un array */
+
+extern void rotateArray(t_program_infos *program, t_axe_variable *array
+                              , t_axe_expression displacement, int dir);
+
 #endif

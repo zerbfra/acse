@@ -262,6 +262,7 @@ statements  : statements statement       { /* does nothing */ }
 statement   : assign_statement SEMI      { /* does nothing */ }
             | control_statement          { /* does nothing */ }
             | read_write_statement SEMI  { /* does nothing */ }
+            | array_shift_statement SEMI  { /* does nothing */ }
             | SEMI            { gen_nop_instruction(program); }
 ;
 
@@ -275,6 +276,33 @@ control_statement : if_statement         { /* does nothing */ }
 
 read_write_statement : read_statement  { /* does nothing */ }
                      | write_statement { /* does nothing */ }
+;
+
+
+array_shift_statement: IDENTIFIER SHR_OP exp
+{
+    t_axe_variable *id = getVariable(program,$1);
+    if(!id->isArray) {
+        printMessage("Array expected");
+        exit(-1);
+    }
+    
+    // ruoto l'array con parametri: program id spostamento direzione (1=R, 0 = L)
+    rotateArray(program,id,$3,1);
+
+    
+}
+| IDENTIFIER SHL_OP exp
+{
+    t_axe_variable *id = getVariable(program,$1);
+    if(!id->isArray) {
+        printMessage("Array expected");
+        exit(-1);
+    }
+    
+    // ruoto l'array con parametri: program id spostamento direzione (1=R, 0 = L)
+    rotateArray(program,id,$3,0);
+}
 ;
 
 assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp
