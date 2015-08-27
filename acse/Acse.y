@@ -136,6 +136,8 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token READ
 %token WRITE
 
+%token ARRAY_ASSIGN
+
 %token <label> DO
 %token <while_stmt> WHILE
 %token <label> IF
@@ -298,8 +300,82 @@ assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp
 			   }
 			   free($1);
             }
+            | IDENTIFIER ARRAY_ASSIGN IDENTIFIER {
+                
+                t_axe_variable *dest_array = getVariable(program,$1);
+                t_axe_variable *src_array = getVariable(program,$3);
+                
+                if(!dest_array->isArray || !src_array->isArray) {
+                    printMessage("Two array needed");
+                    exit(-1);
+                }
+                
+
+                // trovo la dimensione minima
+                int min_size = dest_array->arraySize > src_array->arraySize ? src_array->arraySize : dest_array->arraySize;
+                
+                // carico, togliendo 1
+                int index = gen_load_immediate(program,min_size-1);
+                t_axe_expression index_exp = create_expression(index,REGISTER);
+                
+                
+                t_axe_label *loop_end = newLabel(program);
+                t_axe_label *loop_start = assignNewLabel(program);
+                
+                
+                // recupero l'elemento dalla sorgente
+                int element = loadArrayElement(program,src_array->ID,index_exp);
+                t_axe_expression element_exp = create_expression(element,REGISTER);
+                // lo metto nell'array destinazione
+                storeArrayElement(program,dest_array->ID,index_exp,element_exp);
+                
+                // diminuisco l'index per andare a ritroso
+                gen_subi_instruction(program,index_exp.value,index_exp.value,1);
+                // se minore di zero salto alla fine (zero è ultimo elemento da scrivere)
+                gen_blt_instruction(program,loop_end,0);
+                // altrimenti, torno al loop
+                gen_bt_instruction(program,loop_start,0);
+                
+                assignLabel(program,loop_end);
+                
+                
+                // una volta finito il loop di copiatura, devo vedere se size[dest_array] > min_size
+                
+                if(dest_array->arraySize > min_size) {
+                    // devo aggiungere gli zeri fino alla fine
+                    // parto da min_size fino alla fine di dest_array
+                    int index = gen_load_immediate(program,min_size);
+                    t_axe_expression index_exp = create_expression(index,REGISTER);
+                    
+                    // limite dove devo arrivare (non tolgo uno perchè fa beq sul jump)
+                    int max_size = dest_array->arraySize;
+                    
+                    t_axe_expression zero = create_expression(0,IMMEDIATE);
+                    
+                    t_axe_label *zero_loop_end = newLabel(program);
+                    t_axe_label *zero_loop_start = assignNewLabel(program);
+                    
+                    // salvo
+                    storeArrayElement(program,dest_array->ID,index_exp,zero);
+                    // vado avanti con index
+                    gen_addi_instruction(program,index,index,1);
+                    
+                    int temp = getNewRegister(program);
+                    gen_sub_instruction(program,temp,index,max_size,CG_DIRECT_ALL);
+                    
+                    // se = 0 salto alla fine, altrimenti torno al loop
+                    gen_beq_instruction(program,zero_loop_end,0);
+                    gen_bt_instruction(program,zero_loop_start,0);
+                    
+                    assignLabel(program,zero_loop_end);
+        
+                }
+                
+                
+    
+            }
 ;
-            
+
 if_statement   : if_stmt
                {
                   /* fix the `label_else' */
