@@ -287,8 +287,8 @@ array_shift_statement: IDENTIFIER SHR_OP exp
         exit(-1);
     }
     
-    // ruoto l'array con parametri: program id spostamento direzione (1=R, 0 = L)
-    rotateArray(program,id,$3,1);
+    // ruoto l'array con parametri: program id spostamento direzione
+    rotateArray(program,id,$3,VECSR);
 
     
 }
@@ -300,8 +300,8 @@ array_shift_statement: IDENTIFIER SHR_OP exp
         exit(-1);
     }
     
-    // ruoto l'array con parametri: program id spostamento direzione (1=R, 0 = L)
-    rotateArray(program,id,$3,0);
+    // ruoto l'array con parametri: program id spostamento direzione
+    rotateArray(program,id,$3,VECSL);
 }
 ;
 

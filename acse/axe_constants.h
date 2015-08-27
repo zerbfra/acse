@@ -92,6 +92,11 @@
 /* WARNINGS */
 #define WARN_DIVISION_BY_ZERO 1
 
+/* Vect SHIFTLEFT and SHIFTRIGHT */
+
+#define VECSL 100
+#define VECSR 101
+
 /* SIM errorcodes */
 #define AXE_OK 0
 #define AXE_OUT_OF_MEMORY 1

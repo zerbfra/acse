@@ -12,6 +12,7 @@
 #include "symbol_table.h"
 #include "axe_utils.h"
 #include "axe_errors.h"
+#include "axe_constants.h"
 
 
 void rotateArray(t_program_infos *program, t_axe_variable *array, t_axe_expression displacement, int dir) {
@@ -60,13 +61,21 @@ void rotateArray(t_program_infos *program, t_axe_variable *array, t_axe_expressi
         gen_ble_instruction(program,end_loop,0);
         
         
-        // salvo array[0], altrimenti andrebbe perso!
+        // SHIFT LEFT:  salvo array[0], altrimenti andrebbe perso!
+        // SHIFT RIGHT: salvo array[index_last]
         t_axe_expression index_0 = create_expression(0,IMMEDIATE);
-        int element_0 = loadArrayElement(program,array->ID,index_0);
-        t_axe_expression element_0_exp = create_expression(element_0,REGISTER);
+        int savedEl;
+    
+        if(dir == VECSL) savedEl = loadArrayElement(program,array->ID,index_0);
+        else savedEl = loadArrayElement(program,array->ID,last_exp);
+    
+        t_axe_expression savedEl_exp = create_expression(savedEl,REGISTER);
 
-        // fisso index a 1 (elemento 0 è già stato memorizzato)
-        index = gen_load_immediate(program,1);
+        // SHIFT LEFT:  fisso index a 1 (elemento 0 è già stato memorizzato)
+        // SHIFT RIGHT: fisso a index-last in quanto vado dalla fine all'inizio
+        if(dir == VECSL) index = gen_load_immediate(program,1);
+        else index = gen_load_immediate(program,index_last-1);
+    
         index_exp = create_expression(index,REGISTER);
 
         /***** CICLO INTERNO *******/
@@ -80,21 +89,31 @@ void rotateArray(t_program_infos *program, t_axe_variable *array, t_axe_expressi
             data = loadArrayElement(program,array->ID,index_exp);
             data_exp = create_expression(data,REGISTER);
             
-            // per copiare il dato array[index] ad array[index-1] (scalano tutti verso sx: shift rotate sx)
-            gen_subi_instruction(program,index,index,1);
+            // SHIFT LEFT:  per copiare il dato array[index] ad array[index-1] (scalano tutti verso sx)
+            // SHIFT RIGHT: aumento di uno copiare da [index] a [index+1] (li scalo tutti verso dx)
+            if(dir == VECSL) gen_subi_instruction(program,index,index,1);
+            else gen_addi_instruction(program,index,index,1);
             
             // salvo data in array[index-1]
+            // oppure in array[index+1]
             storeArrayElement(program,array->ID,index_exp,data_exp);
             
-            // aggiungo +2: +1 per avanzamento indice, +1 perchè ho fatto la subi per ottere index-1
-            gen_addi_instruction(program,index,index,2);
+            // SHIFT LEFT:  aggiungo +2: +1 per avanzamento indice, +1 perchè ho fatto la subi per ottere index-1
+            // SHIFT RIGHT: devo fare -2: -1 per la addi, -1 per indietreggiare
+            if(dir == VECSL) gen_addi_instruction(program,index,index,2);
+            else gen_subi_instruction(program,index,index,2);
+    
 
-            // valuto se index è arrivato alla dimensione dell'array, sottraggo:
+            // SHIFT LEFT:  valuto se index è arrivato alla dimensione dell'array, sottraggo:
+            // SHIFT RIGHT: se sto indietreggiando devo valutare solo se index = 0 quindi non lo faccio
             int result = getNewRegister(program);
-            gen_sub_instruction(program,result,index,size,CG_DIRECT_ALL);
+            if(dir==VECSL) gen_sub_instruction(program,result,index,size,CG_DIRECT_ALL);
             
-            // se result = size-index = 0, allora vado alla fine (index=size, ho finito!)
-            gen_beq_instruction(program,end,0);
+            // SHIFT LEFT:  se result = size-index = 0, allora vado alla fine (index=size, ho finito!)
+            // SHIFT RIGHT: devo ripetere ancora una volta per l'elemento in posizione 0,
+            //              quindi faccio un altro ciclo (mi fermerò al prossimo che da index = -1
+            if(dir == VECSL) gen_beq_instruction(program,end,0);
+            else gen_blt_instruction(program,end,0);
             
             // altrimenti, torno alla condizione
             gen_bt_instruction(program,condition,0);
@@ -104,8 +123,10 @@ void rotateArray(t_program_infos *program, t_axe_variable *array, t_axe_expressi
         /***** FINE CICLO INTERNO *******/
         
 
-        // metto quello che era il primo alla fine
-        storeArrayElement(program,array->ID,last_exp,element_0_exp);
+        // SHIFT LEFT: metto quello che era il primo alla fine
+        // SHIFT RIGHT: devo mettere il finale nella prima posizione
+        if(dir == VECSL) storeArrayElement(program,array->ID,last_exp,savedEl_exp);
+        else storeArrayElement(program,array->ID,index_0,savedEl_exp);
 
         
         // tolgo 1 al displacement, perchè un ciclo di spostamenti è fatto
