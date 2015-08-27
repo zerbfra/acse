@@ -22,6 +22,22 @@ Si noti come l'istruzione `int imm_register = gen_load_immediate(program, 1)` eq
     gen_addi_instruction(program, imm_register, REG_0, 1);   // 1 è int, REG_0 ha valore 0
     return imm_register;
 
+Spesso è comodo un pattern del tipo:
+    
+    int disp;
+    // carico valore displacement, che è una exp
+    if(displacement.expression_type == IMMEDIATE) {
+        disp = gen_load_immediate(program,displacement.value);
+    } else {
+        disp = getNewRegister(program);
+        disp = gen_andb_instruction(program,disp,displacement.value,displacement.value,CG_DIRECT_ALL);
+    }
+    // genero exp per il displacement (cosi è utilizzabile in istruzioni che lo richiedono
+    // attenzione, visto che ho messo il tipo REGISTER, ora modificando disp_exp, anche il valore
+    // di disp cambia! 
+    
+    t_axe_expression disp_exp = create_expression(disp,REGISTER);
+
 
 ### Gestione degli errori:
     printMessage("Positive immmediate expected”); 
@@ -75,6 +91,15 @@ t_axe_expression lt = handle_binary_comparison(program,$1,$3,_LT_); …come facc
      
      int element = loadArrayElement(program,array->ID,index_exp);
      storeArrayElement(program,array->ID,index_exp,data_exp);
+     
+Si può usare `id->arraySize` come intero e svolgerci sopra operazioni: 
+ 
+    int last_el = id->arraySize-1
+
+Quando passo degli array a delle funzioni, è meglio recuperarli con:
+     
+     t_axe_variable *dest_array = getVariable(program,$1);
+     t_axe_variable *src_array = getVariable(program,$3);
 
 #### Liste
 
