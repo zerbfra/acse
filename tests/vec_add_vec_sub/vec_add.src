@@ -3,8 +3,23 @@
  * vec_add.src
  */
 
-int a[10];
-int b[10];
-int c[10];
+int a[3];
+int b[3];
+
+int c[3];
+
+a[0] = 1;
+a[1] = 2;
+a[2] = 3;
+
+b[0] = 3;
+b[1] = 2;
+b[2] = 1;
 
 vec_add(c, a, b);
+
+
+write(c[0]);
+write(c[1]);
+write(c[2]);
+

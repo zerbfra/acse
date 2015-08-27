@@ -9,6 +9,7 @@
 
 #include "axe_vec.h"
 
+
 void handle_vec_op(t_program_infos *program, char *destID, char *sourceID1, char *sourceID2, int vec_op) {
     
     t_axe_variable *dest_var = getVariable(program,destID);
@@ -30,10 +31,10 @@ void handle_vec_op(t_program_infos *program, char *destID, char *sourceID1, char
     
     t_axe_label *start, *end;
     
-    index_register = getNewRegister(program);
+    // index: vado dall'ultimo elemento al primo
+    index_register = gen_load_immediate(program,dest_var->arraySize);
     index = create_expression(index_register,REGISTER);
-    
-    gen_mova_instruction(program,index_register,NULL,dest_var->arraySize);
+
     
     dest_register = getNewRegister(program);
     dest = create_expression(dest_register,REGISTER);
@@ -41,7 +42,7 @@ void handle_vec_op(t_program_infos *program, char *destID, char *sourceID1, char
     start = assignNewLabel(program);
     end = newLabel(program);
     
-    
+    // se index è a 0 salto alla fine
     gen_andb_instruction(program,index_register,index_register,index_register,CG_DIRECT_ALL);
     gen_beq_instruction(program,end,0);
     
@@ -49,10 +50,27 @@ void handle_vec_op(t_program_infos *program, char *destID, char *sourceID1, char
     gen_subi_instruction(program,index_register,index_register,1);
     
     // carico i due sorgenti
-    int src1_register = loadArrayElement(program,sourceID1,index);
-    int src2_register = loadArrayElement(program,sourceID2,index);
+    int src1_register = loadArrayElement(program,source_var1->ID,index);
+    int src2_register = loadArrayElement(program,source_var2->ID,index);
     
+    // eseguo l'operazione adatta a seconda di vec_op
+    switch (vec_op) {
+        case VADD:
+            gen_add_instruction(program,dest_register,src1_register,src2_register,CG_DIRECT_ALL);
+            break;
+        case VSUB:
+            gen_sub_instruction(program,dest_register,src1_register,src2_register,CG_DIRECT_ALL);
+            break;
+        default:
+            notifyError(AXE_INVALID_OPCODE);
+            break;
+    }
     
+    storeArrayElement(program,dest_var->ID,index,dest);
+    
+    gen_bt_instruction(program,start,0);
+    
+    assignLabel(program,end);
     
     
 }
