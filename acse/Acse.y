@@ -136,6 +136,11 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token READ
 %token WRITE
 
+
+%token <intval> MAP
+%token <label> ON
+%token AS
+
 %token <label> DO
 %token <while_stmt> WHILE
 %token <label> IF
@@ -271,10 +276,55 @@ control_statement : if_statement         { /* does nothing */ }
             | do_while_statement SEMI    { /* does nothing */ }
 			| foreach_statement			 { /* does nothing */ }
             | return_statement SEMI      { /* does nothing */ }
+            | map_statement              { /* does nothing */ }
 ;
 
 read_write_statement : read_statement  { /* does nothing */ }
                      | write_statement { /* does nothing */ }
+;
+
+
+map_statement: MAP IDENTIFIER ON IDENTIFIER AS
+            {
+                t_axe_variable *var_elem = getVariable(program,$2);
+                t_axe_variable *var_array = getVariable(program,$3);
+                if(!var_array->isArray) {
+                    exit(-1);
+                }
+                // recupero elem
+                int elem_reg = get_symbol_location(program,$2,0);
+                
+                // carico indice
+                $1 = gen_load_immediate(program,var_array->arraySize -1);
+                
+                $3 = assignNewLabel(program);
+                
+                // creo exp per indice
+                t_axe_expression index = create_expression($1,REGISTER);
+                int tmp = loadArrayElement(program,$4,index);
+                
+                // aggiungo quanto specificato al vettore
+                gen_add_instruction(program,elem_reg,REG_0,tmp);
+                
+            } code_block {
+                
+                // dopo che ho eseguito delle operazioni su elem, quindi $2,
+                // procedo  a memorizzarlo nell'array
+                
+                int elem_reg = get_symbol_location(program,$2,0);
+                t_axe_expression index = create_expression($1,REGISTER);
+                
+                t_axe_expression elem = create_expression(elem_reg,REGISTER);
+                
+                // salvo nell'array, all'index corretto, l'elemento (modificato con la add sopra)
+                storeArrayElement(program,$4,index,elem);
+                
+                // indietreggio con index
+                gen_subi_instruction(program,$1,$1,1);
+                // se index>=0 torno indietro e rifaccio
+                gen_bge_instruction(program,$3,0);
+                
+            }
 ;
 
 assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp
