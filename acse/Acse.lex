@@ -92,6 +92,11 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
 "map"             { return MAP; }
 "on"              { return ON;  }
 "as"              { return AS;  }
+"into"            { return INTO; }
+"reduce"          { return REDUCE; }
+
+"[["              { return LDSQUARE; }
+"]]"              { return RDSQUARE; }
 
 "do"              { return DO; }
 "else"            { return ELSE; }

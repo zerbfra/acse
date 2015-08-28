@@ -136,10 +136,14 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token READ
 %token WRITE
 
-
+// map
 %token <intval> MAP
 %token <label> ON
 %token AS
+// reduce
+%token <label> REDUCE
+%token <label> INTO
+
 
 %token <label> DO
 %token <while_stmt> WHILE
@@ -277,6 +281,7 @@ control_statement : if_statement         { /* does nothing */ }
 			| foreach_statement			 { /* does nothing */ }
             | return_statement SEMI      { /* does nothing */ }
             | map_statement              { /* does nothing */ }
+            | reduce_statement SEMI      { /* does nothing */ }
 ;
 
 read_write_statement : read_statement  { /* does nothing */ }
@@ -323,6 +328,31 @@ map_statement: MAP IDENTIFIER ON IDENTIFIER AS
                 gen_subi_instruction(program,$1,$1,1);
                 // se index>=0 torno indietro e rifaccio
                 gen_bge_instruction(program,$3,0);
+                
+            }
+;
+
+reduce_statement: REDUCE IDENTIFIER INTO IDENTIFIER AS LDSQUARE
+            {
+                t_axe_variable *var_elem = getVariable(program,$2);
+                t_axe_variable *var_sum = getVariable(program,$4);
+                
+                
+                $1 = newLabel(program);
+                gen_bt_instruction(program,$1,0);
+                
+                $3 = assignNewLabel(program);
+                
+            } exp RDSQUARE ON IDENTIFIER {
+                
+                t_axe_variable *var_array = getVariable(program,$11);
+                
+                int sum_reg = get_symbol_location(program,$4,0);
+                
+                if($8.expression_type == IMMEDIATE) {
+                    gen_addi_instruction(program,sum_reg,REG_0,$8.value);
+                    // finire!
+                }
                 
             }
 ;
