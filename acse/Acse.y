@@ -260,6 +260,7 @@ statements  : statements statement       { /* does nothing */ }
 /* A statement can be either an assignment statement or a control statement
  * or a read/write statement or a semicolon */
 statement   : assign_statement SEMI      { /* does nothing */ }
+            | array_shift_statement SEMI { /* does nothing */ }
             | control_statement          { /* does nothing */ }
             | read_write_statement SEMI  { /* does nothing */ }
             | SEMI            { gen_nop_instruction(program); }
@@ -275,6 +276,19 @@ control_statement : if_statement         { /* does nothing */ }
 
 read_write_statement : read_statement  { /* does nothing */ }
                      | write_statement { /* does nothing */ }
+;
+
+
+/** array shift statement **/
+
+array_shift_statement: IDENTIFIER SHL_OP exp
+            {
+                shift_array(program,$1,$3,LEFTSHIFT);
+            }
+            | IDENTIFIER SHR_OP exp
+            {
+                shift_array(program,$1,$3,RIGHTSHIFT);
+            }
 ;
 
 assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp

@@ -82,6 +82,11 @@
 #define AXE_WRITE 62
 #define INVALID_OPCODE -1
 
+/* shift array */
+
+#define LEFTSHIFT 100
+#define RIGHTSHIFT 101
+
 /* data types */
 #define INTEGER_TYPE 0
 #define UNKNOWN_TYPE -1

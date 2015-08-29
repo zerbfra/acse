@@ -48,4 +48,7 @@ extern int loadArrayAddress(t_program_infos *program
 extern void storeArrayElement(t_program_infos *program, char *ID
             , t_axe_expression index, t_axe_expression data);
 
+/* array shift */
+extern void shift_array(t_program_infos *program,char *ID, t_axe_expression shift, int direction);
+
 #endif
