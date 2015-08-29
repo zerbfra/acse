@@ -1,0 +1,24 @@
+
+int elem;
+int sum;
+int a[4];
+
+
+a[0] = 0;
+a[1] = 1;
+a[2] = 2;
+a[3] = 3;
+
+map elem on a as
+    elem = elem*2;
+
+write (a[0]);
+write (a[1]);
+write (a[2]);
+write (a[3]);
+
+
+reduce elem into sum
+    as [[ sum + elem]] on a;
+
+write(sum);

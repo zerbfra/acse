@@ -144,6 +144,7 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token <label> REDUCE
 %token <label> INTO
 
+%token RDSQUARE LDSQUARE
 
 %token <label> DO
 %token <while_stmt> WHILE
@@ -292,7 +293,7 @@ read_write_statement : read_statement  { /* does nothing */ }
 map_statement: MAP IDENTIFIER ON IDENTIFIER AS
             {
                 t_axe_variable *var_elem = getVariable(program,$2);
-                t_axe_variable *var_array = getVariable(program,$3);
+                t_axe_variable *var_array = getVariable(program,$4);
                 if(!var_array->isArray) {
                     exit(-1);
                 }
@@ -309,7 +310,7 @@ map_statement: MAP IDENTIFIER ON IDENTIFIER AS
                 int tmp = loadArrayElement(program,$4,index);
                 
                 // aggiungo quanto specificato al vettore
-                gen_add_instruction(program,elem_reg,REG_0,tmp);
+                gen_add_instruction(program,elem_reg,REG_0,tmp,CG_DIRECT_ALL);
                 
             } code_block {
                 
@@ -349,10 +350,37 @@ reduce_statement: REDUCE IDENTIFIER INTO IDENTIFIER AS LDSQUARE
                 
                 int sum_reg = get_symbol_location(program,$4,0);
                 
+                t_axe_label *end_label = newLabel(program);
+                
                 if($8.expression_type == IMMEDIATE) {
                     gen_addi_instruction(program,sum_reg,REG_0,$8.value);
-                    // finire!
+                    
+                    gen_bt_instruction(program,end_label,0);
+                    // dall'inizio si salta qui
+                    assignLabel(program,$1);
+                    gen_bt_instruction(program,$3,0);
+                } else {
+                    int iv_reg = getNewRegister(program);
+                    t_axe_expression ive = create_expression(iv_reg,REGISTER);
+                    
+                    int elemen_reg = get_symbol_location(program,$2,0);
+                    
+                    gen_addi_instruction(program,sum_reg, $8.value,0);
+                    gen_subi_instruction(program,iv_reg,iv_reg,1);
+                    gen_blt_instruction(program,end_label,0);
+                    
+                    t_axe_label *begin_label = assignNewLabel(program);
+                    int tmp = loadArrayElement(program,$11,ive);
+                    gen_addi_instruction(program,elemen_reg,tmp,0);
+                    gen_bt_instruction(program,$3,0);
+                    
+                    assignLabel(program,$1);
+                    
+                    gen_addi_instruction(program,iv_reg,REG_0,var_array->arraySize-1);
+                    gen_bt_instruction(program,begin_label,0);
                 }
+                
+                assignLabel(program,end_label);
                 
             }
 ;
