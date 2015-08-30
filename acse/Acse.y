@@ -661,8 +661,8 @@ exp: NUMBER      { $$ = create_expression ($1, IMMEDIATE); }
                  gen_mul_instruction(program, tmp, tmp,  (* (int *) $6->data), CG_DIRECT_ALL);
                  
                  gen_add_instruction(program, result, tmp, result, CG_DIRECT_ALL);
-                 gen_addi_instruction(program,idx.value,idx.value,1);
-              
+                 
+                 idx.value++;
                  $6=$6->next;
                  
             }
@@ -671,29 +671,31 @@ exp: NUMBER      { $$ = create_expression ($1, IMMEDIATE); }
     }
     | AVG WEIGHTED BY IDENTIFIER LSQUARE exp_list RSQUARE {
         
-        int result, tmp, op;
+        int result, tmp, weights;
         
         t_axe_expression idx;
         idx = create_expression(0,IMMEDIATE);
         result = gen_load_immediate(program, 0);
-        op = gen_load_immediate(program,0);
+        weights = gen_load_immediate(program,0);
         
         while($6 != NULL){
             
             tmp = loadArrayElement(program, $4, idx);
+            gen_add_instruction(program,weights,tmp,weights,CG_DIRECT_ALL);
             
             gen_mul_instruction(program, tmp, tmp,  (* (int *) $6->data), CG_DIRECT_ALL);
             
             gen_add_instruction(program, result, tmp, result, CG_DIRECT_ALL);
-            gen_addi_instruction(program,idx.value,idx.value,1);
             
-            gen_addi_instruction(program,op,op,(* (int *) $6->data));
             
+            // avanzo sia sull'array che sulla lista
+            
+            idx.value++;
             $6=$6->next;
             
         }
         
-        gen_div_instruction(program,result,result,op,CG_DIRECT_ALL);
+        gen_div_instruction(program,result,result,weights,CG_DIRECT_ALL);
         
         $$ = create_expression(result, REGISTER);
     }

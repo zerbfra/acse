@@ -2,8 +2,10 @@ int a[3];
 int k;
 
 a[0] = 5;
-a[1] = 10;
-a[2] = 0;
+a[1] = 5;
+a[2] = 5;
 
 
-k = average weighted by a [27, 24, 21];
+k = avg weighted by a [10, 15, 15];
+
+write(k);
