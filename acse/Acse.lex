@@ -93,6 +93,7 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
 "sum"             { return SUM; }
 "weighted"        { return WEIGHTED; }
 "by"              { return BY; }
+"avg"              { return AVG; }
 
 "do"              { return DO; }
 "else"            { return ELSE; }

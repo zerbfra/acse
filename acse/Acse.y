@@ -148,6 +148,7 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token <foreach_stmt> FOR
 
 %token SUM WEIGHTED BY
+%token AVG
 
 %type <expr> exp
 %type <expr> assign_statement
@@ -645,7 +646,7 @@ exp: NUMBER      { $$ = create_expression ($1, IMMEDIATE); }
                                  (program, exp_r0, $2, SUB);
                         }
                      }
-    |  SUM WEIGHTED BY IDENTIFIER LSQUARE exp_list RSQUARE {
+    | SUM WEIGHTED BY IDENTIFIER LSQUARE exp_list RSQUARE {
         
            int result, tmp;
            
@@ -664,9 +665,37 @@ exp: NUMBER      { $$ = create_expression ($1, IMMEDIATE); }
               
                  $6=$6->next;
                  
-               }
+            }
            
            $$ = create_expression(result, REGISTER);
+    }
+    | AVG WEIGHTED BY IDENTIFIER LSQUARE exp_list RSQUARE {
+        
+        int result, tmp, op;
+        
+        t_axe_expression idx;
+        idx = create_expression(0,IMMEDIATE);
+        result = gen_load_immediate(program, 0);
+        op = gen_load_immediate(program,0);
+        
+        while($6 != NULL){
+            
+            tmp = loadArrayElement(program, $4, idx);
+            
+            gen_mul_instruction(program, tmp, tmp,  (* (int *) $6->data), CG_DIRECT_ALL);
+            
+            gen_add_instruction(program, result, tmp, result, CG_DIRECT_ALL);
+            gen_addi_instruction(program,idx.value,idx.value,1);
+            
+            gen_addi_instruction(program,op,op,(* (int *) $6->data));
+            
+            $6=$6->next;
+            
+        }
+        
+        gen_div_instruction(program,result,result,op,CG_DIRECT_ALL);
+        
+        $$ = create_expression(result, REGISTER);
     }
 ;
 
