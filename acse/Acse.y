@@ -147,12 +147,15 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token <label> UNLESS
 %token <foreach_stmt> FOR
 
+%token SUM WEIGHTED BY
+
 %type <expr> exp
 %type <expr> assign_statement
 %type <decl> declaration
 %type <list> declaration_list
 %type <label> if_stmt
 %type <label> unless_statement
+%type <list> exp_list
 
 /*=========================================================================
                           OPERATOR PRECEDENCES
@@ -193,6 +196,31 @@ program  : var_declarations statements
             /* return from yyparse() */
             YYACCEPT;
          }
+;
+
+/* lista */
+
+exp_list: exp_list COMMA exp
+        {
+            if($3.expression_type == IMMEDIATE) {
+                int reg = gen_load_immediate(program,$3.value);
+                $1 = addLast($1,&reg);
+            } else {
+                $1 = addLast($1,&($3.value));
+            }
+            $$ = $1;
+        } | exp {
+            
+            t_list* head = NULL;
+            if($1.expression_type == IMMEDIATE) {
+                int reg = gen_load_immediate(program, $1.value);
+                head =  addLast(head, &reg);
+            } else {
+                int reg = $1.value;
+                head = addLast(head, &reg);
+            }
+            $$ = head;
+        }
 ;
 
 var_declarations : var_declarations var_declaration   { /* does nothing */ }
@@ -617,7 +645,32 @@ exp: NUMBER      { $$ = create_expression ($1, IMMEDIATE); }
                                  (program, exp_r0, $2, SUB);
                         }
                      }
+    |  SUM WEIGHTED BY IDENTIFIER LSQUARE exp_list RSQUARE {
+        
+           int result, tmp;
+           
+           t_axe_expression idx;
+           idx = create_expression(0,IMMEDIATE);
+           result = gen_load_immediate(program, 0);
+           
+           while($6 != NULL){
+               
+                 tmp = loadArrayElement(program, $4, idx);
+                 
+                 gen_mul_instruction(program, tmp, tmp,  (* (int *) $6->data), CG_DIRECT_ALL);
+                 
+                 gen_add_instruction(program, result, tmp, result, CG_DIRECT_ALL);
+                 gen_addi_instruction(program,idx.value,idx.value,1);
+              
+                 $6=$6->next;
+                 
+               }
+           
+           $$ = create_expression(result, REGISTER);
+    }
 ;
+
+
 
 %%
 /*=========================================================================
