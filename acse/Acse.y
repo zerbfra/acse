@@ -136,6 +136,9 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token READ
 %token WRITE
 
+
+%token ASSERT
+
 %token <label> DO
 %token <while_stmt> WHILE
 %token <label> IF
@@ -271,10 +274,33 @@ control_statement : if_statement         { /* does nothing */ }
             | do_while_statement SEMI    { /* does nothing */ }
 			| foreach_statement			 { /* does nothing */ }
             | return_statement SEMI      { /* does nothing */ }
+            | assert_statement SEMI      { /* does nothing */ }
 ;
 
 read_write_statement : read_statement  { /* does nothing */ }
                      | write_statement { /* does nothing */ }
+;
+
+assert_statement: ASSERT LPAR exp RPAR
+        {
+            if($3.expression_type == IMMEDIATE) {
+                gen_load_immediate(program,$3.value);
+            } else {
+                gen_andb_instruction(program,$3.value,$3.value,$3.value,CG_DIRECT_ALL);
+            }
+            
+            t_axe_label *halt = newLabel(program);
+            t_axe_label *end = newLabel(program);
+            // se 0 è halt
+            gen_beq_instruction(program,halt,0);
+            gen_bt_instruction(program,end,0);
+            
+            assignLabel(program,halt);
+            gen_halt_instruction(program);
+            
+            //end
+            assignLabel(program,end);
+        }
 ;
 
 assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp

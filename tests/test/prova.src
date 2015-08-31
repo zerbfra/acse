@@ -1,0 +1,8 @@
+int a;
+
+read(a);
+
+
+assert(a);
+
+write(a);
