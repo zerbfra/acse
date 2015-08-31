@@ -109,3 +109,11 @@ equivale a
     t_forall_statement *stmt = (t_forall_statement*) LDATA(forall_loop_nest); 
 
 questo perchè LDATA va a prendere il dato dalla lista (il primo, visto che una lista è un insieme di nodi e recupera il `data` del primo nodo)
+
+Per aggiungere/rimuovere un elemento, ad esempio una label
+
+    lista = addFirst(lista, elemento)
+    lista = removeFirst(lista)
+    
+    
+    
