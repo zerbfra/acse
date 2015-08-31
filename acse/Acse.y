@@ -90,6 +90,13 @@ t_reg_allocator *RA;       /* Register allocator. It implements the "Linear scan
 
 t_io_infos *file_infos;    /* input and output files used by the compiler */
 
+/* definisco la struttura che mi fa gestire il costrutto */
+struct {
+    t_axe_label *body_label;
+    t_axe_label *cond_label;
+    int index_reg;
+} array_compr;
+
 %}
 
 %expect 1
@@ -135,6 +142,8 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token RETURN
 %token READ
 %token WRITE
+
+%token IN
 
 %token <label> DO
 %token <while_stmt> WHILE
@@ -297,6 +306,79 @@ assign_statement : IDENTIFIER LSQUARE exp RSQUARE ASSIGN exp
 					$$ = create_expression($3.value, REGISTER);
 			   }
 			   free($1);
+            }
+            | IDENTIFIER ASSIGN {
+                
+                array_compr.cond_label = newLabel(program);
+                
+                // inizializzo l'index
+                array_compr.index_reg = gen_load_immediate(program,0);
+                // salto alla condizione
+                gen_bt_instruction(program,array_compr.cond_label,0);
+                
+                // assegno la label e ci tornerò dopo
+                array_compr.body_label = assignNewLabel(program);
+                
+            } LSQUARE exp {
+                
+                // questo blocco viene eseguito per la prima volta dopo che si è eseguito il successivo (FOR IDENTIFIER...)
+                
+                int index_reg = array_compr.index_reg;
+                t_axe_expression index_exp = create_expression(index_reg,REGISTER);
+                
+                // salvo sull'array dell'identifier il valore di $5 che ora è completato
+                storeArrayElement(program,$1,index_exp,$5);
+                
+                // proseguo di una posizione in avanti
+                gen_addi_instruction(program,index_reg,index_reg,1);
+                
+                
+            } FOR IDENTIFIER IN IDENTIFIER RSQUARE {
+                
+                // ottengo valore i
+                t_axe_variable *iv = getVariable(program,$8);
+                t_axe_variable *dest = getVariable(program,$1);
+                t_axe_variable *src = getVariable(program,$10);
+                
+                // faccio i dovuti controlli
+                if(!dest->isArray || !src->isArray || iv->isArray) exit(-1);
+                
+                // guardo la dimensione minima tra i due array:
+                t_axe_expression min_size = create_expression(dest->arraySize < src->arraySize ? dest->arraySize : src->arraySize,IMMEDIATE);
+                
+                // ora, devo caricare il valore dell'array in $8 - ottengo il registro
+                int iv_reg = get_symbol_location(program,$8,0);
+                
+                // recupero index_reg (che ho salvato nella struct per poterlo agevolmente portare in giro)
+                int index_reg = array_compr.index_reg;
+                t_axe_expression index_expr = create_expression(index_reg,REGISTER);
+                
+                t_axe_label *end_label = newLabel(program);
+                
+                
+                /** verifico se index < min size **/
+                assignLabel(program,array_compr.cond_label);
+                int tmp = getNewRegister(program);
+                gen_subi_instruction(program,tmp,index_reg,min_size.value);
+                
+                // se index>min_size salto alla fine
+                
+                gen_beq_instruction(program,end_label,0);
+                
+                
+                // carico in elem il valore dell'array
+                int elem = loadArrayElement(program,$10,index_expr);
+                // lo salvo in i (che è iv_reg, $8)
+                gen_addi_instruction(program,iv_reg,elem,0);
+                
+                // salto sopra per memorizzare
+                gen_bt_instruction(program,array_compr.body_label,0);
+                
+                assignLabel(program,end_label);
+                
+                //free($1);
+                //free($8);
+                //free($10);
             }
 ;
             
