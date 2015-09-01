@@ -8,9 +8,9 @@ USED VARIABLES : 5
 -------------------------
 LIVE_INTERVALS:
 	LIVE_INTERVAL of T2 : [0, 1] 
-	LIVE_INTERVAL of T1 : [2, 3] 
-	LIVE_INTERVAL of T3 : [7, 8] 
-	LIVE_INTERVAL of T4 : [9, 10] 
+	LIVE_INTERVAL of T3 : [2, 3] 
+	LIVE_INTERVAL of T1 : [4, 6] 
+	LIVE_INTERVAL of T4 : [10, 11] 
 -------------------------
 BINDINGS : 
 VAR T0 will be assigned to register R0 

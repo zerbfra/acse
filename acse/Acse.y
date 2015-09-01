@@ -102,8 +102,7 @@ int syn_label_compare(void* a, void* b) {
     lA = (t_axe_syn_label *)a;
     lB = (t_axe_syn_label *)b;
     
-    if (strcmp( lA->lab_name,
-    lB->lab_name) ) {
+    if (strcmp(lA->lab_name,lB->lab_name) ) {
         return 0;
     } else {
         return 1;
@@ -306,8 +305,8 @@ statement   : assign_statement SEMI      { /* does nothing */ }
                     syn_label_list = addFirst(syn_label_list,tmp);
                 } else { // SI
                     // label già dichiarata, dobbiamo solo assegnarla
-                    t_axe_syn_label *element = (t_axe_syn_label*)LDATA(found);
-                    element->label = assignLabel(program, ((t_axe_syn_label*)LDATA(found))->label);
+                    t_axe_syn_label *element = LDATA(found);
+                    element->label = assignLabel(program, tmp->lab_name);
                 }
             }
 ;
@@ -326,11 +325,18 @@ control_statement : if_statement         { /* does nothing */ }
 // if artimentico: statement
 
 aif_statement : IF ALPAR exp ARPAR IDENTIFIER COMMA IDENTIFIER COMMA IDENTIFIER {
+    
+    if($3.expression_type == IMMEDIATE) {
+        gen_load_immediate(program,$3.value);
+    } else {
+        gen_andb_instruction(program,$3.value,$3.value,$3.value,CG_DIRECT_ALL);
+    }
+    
     // a questo punto la expression è stata emessa ed eseguita (i bit del PSW sono tutti settati)
     
+    // prima etichetta
     t_axe_syn_label * tmp = malloc(sizeof(t_axe_syn_label));
     tmp->lab_name=strdup($5);
-    
     t_list * found = CustomfindElement(syn_label_list, tmp, &syn_label_compare);
     
     if (found == NULL) {
@@ -339,10 +345,13 @@ aif_statement : IF ALPAR exp ARPAR IDENTIFIER COMMA IDENTIFIER COMMA IDENTIFIER 
         gen_blt_instruction(program, tmp->label,0);
         syn_label_list = addFirst(syn_label_list, tmp);
     } else {
+       
         gen_blt_instruction(program, ((t_axe_syn_label*)LDATA(found))->label,0);
     }
     
     free(tmp->lab_name);
+    
+    // seconda etichetta
     tmp->lab_name=strdup($7);
     found = CustomfindElement(syn_label_list, tmp, &syn_label_compare);
     if (found == NULL) {
@@ -351,6 +360,7 @@ aif_statement : IF ALPAR exp ARPAR IDENTIFIER COMMA IDENTIFIER COMMA IDENTIFIER 
         gen_beq_instruction(program, tmp->label,0);
         syn_label_list = addFirst(syn_label_list, tmp);
     } else {
+        
         gen_beq_instruction(program, ((t_axe_syn_label*)LDATA(found))->label,0);
     }
     
