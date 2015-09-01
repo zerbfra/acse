@@ -379,7 +379,7 @@ aif_statement : IF ALPAR exp ARPAR IDENTIFIER COMMA IDENTIFIER COMMA IDENTIFIER 
     
     free($5);
     free($7);
-    free($9)
+    free($9);
 };
 
 ////////////////////////////////////////////
