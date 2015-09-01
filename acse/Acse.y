@@ -90,6 +90,28 @@ t_reg_allocator *RA;       /* Register allocator. It implements the "Linear scan
 
 t_io_infos *file_infos;    /* input and output files used by the compiler */
 
+
+/* if aritmetico */
+
+// lista label
+t_list * syn_label_list = NULL;
+
+// compare tra label
+int syn_label_compare(void* a, void* b) {
+    t_axe_syn_label *lA, *lB;
+    lA = (t_axe_syn_label *)a;
+    lB = (t_axe_syn_label *)b;
+    
+    if (strcmp( lA->lab_name,
+    lB->lab_name) ) {
+        return 0;
+    } else {
+        return 1;
+    }
+    
+}
+
+
 %}
 
 %expect 1
@@ -135,6 +157,9 @@ t_io_infos *file_infos;    /* input and output files used by the compiler */
 %token RETURN
 %token READ
 %token WRITE
+
+// aggiungo parentesi per l'if artimentico
+%token ARPAR ALPAR
 
 %token <label> DO
 %token <while_stmt> WHILE
@@ -263,6 +288,28 @@ statement   : assign_statement SEMI      { /* does nothing */ }
             | control_statement          { /* does nothing */ }
             | read_write_statement SEMI  { /* does nothing */ }
             | SEMI            { gen_nop_instruction(program); }
+            /* if aritmentico */
+            | IDENTIFIER COLON {
+                // allocata dinamicamente per non farla morire fuori da questo
+                // blocco di codice
+                t_axe_syn_label * tmp = malloc(sizeof(t_axe_syn_label));
+                tmp->lab_name=strdup($1);
+                
+                t_list * found;
+                found = CustomfindElement(syn_label_list, tmp, &syn_label_compare);
+                
+                // esiste già una label con quel nome?
+                if (found == NULL) { // NO
+                    // devo creare una nuova label
+                    // reserve a new label, assign it to the next istruction (assign_statement)
+                    tmp->label = assignNewLabel(program);
+                    syn_label_list = addFirst(syn_label_list,tmp);
+                } else { // SI
+                    // label già dichiarata, dobbiamo solo assegnarla
+                    t_axe_syn_label *element = (t_axe_syn_label*)LDATA(found);
+                    element->label = assignLabel(program, ((t_axe_syn_label*)LDATA(found))->label);
+                }
+            }
 ;
 
 control_statement : if_statement         { /* does nothing */ }
@@ -271,7 +318,64 @@ control_statement : if_statement         { /* does nothing */ }
             | do_while_statement SEMI    { /* does nothing */ }
 			| foreach_statement			 { /* does nothing */ }
             | return_statement SEMI      { /* does nothing */ }
+            | aif_statement SEMI         { /* does nothing */ }
 ;
+
+
+//////////////////////////////////////////
+// if artimentico: statement
+
+aif_statement : IF ALPAR exp ARPAR IDENTIFIER COMMA IDENTIFIER COMMA IDENTIFIER {
+    // a questo punto la expression è stata emessa ed eseguita (i bit del PSW sono tutti settati)
+    
+    t_axe_syn_label * tmp = malloc(sizeof(t_axe_syn_label));
+    tmp->lab_name=strdup($5);
+    
+    t_list * found = CustomfindElement(syn_label_list, tmp, &syn_label_compare);
+    
+    if (found == NULL) {
+        // la label si trova dopo l'aif_statement
+        tmp->label = newLabel(program);
+        gen_blt_instruction(program, tmp->label,0);
+        syn_label_list = addFirst(syn_label_list, tmp);
+    } else {
+        gen_blt_instruction(program, ((t_axe_syn_label*)LDATA(found))->label,0);
+    }
+    
+    free(tmp->lab_name);
+    tmp->lab_name=strdup($7);
+    found = CustomfindElement(syn_label_list, tmp, &syn_label_compare);
+    if (found == NULL) {
+        // la label si trova dopo l'aif_statement
+        tmp->label = newLabel(program);
+        gen_beq_instruction(program, tmp->label,0);
+        syn_label_list = addFirst(syn_label_list, tmp);
+    } else {
+        gen_beq_instruction(program, ((t_axe_syn_label*)LDATA(found))->label,0);
+    }
+    
+    free(tmp->lab_name);
+    tmp->lab_name=strdup($9);
+    found = CustomfindElement(syn_label_list, tmp, &syn_label_compare);
+    if (found == NULL) {
+        // la label si trova dopo l'aif_statement
+        tmp->label = newLabel(program);
+        gen_bgt_instruction(program, tmp->label,0);
+        syn_label_list = addFirst(syn_label_list, tmp);
+    } else {
+        
+        gen_bgt_instruction(program,((t_axe_syn_label*)LDATA(found))->label,0);
+    }
+    
+    free($5);
+    free($7);
+    free($9)
+};
+
+////////////////////////////////////////////
+
+
+
 
 read_write_statement : read_statement  { /* does nothing */ }
                      | write_statement { /* does nothing */ }

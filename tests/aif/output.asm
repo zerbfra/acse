@@ -1,0 +1,15 @@
+	.data
+L0 : 	.WORD 0
+	.text
+L1 : 	ADDI R1 R0 #2
+	WRITE R1 0
+	READ R1 0
+	STORE R1 L0
+	BLT L2
+	BEQ L2
+	BGT L2
+L2 : 	ADDI R1 R0 #3
+	WRITE R1 0
+L3 : 	ADDI R1 R0 #1
+	WRITE R1 0
+	HALT

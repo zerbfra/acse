@@ -1,0 +1,12 @@
+int a;
+
+over: write(2);
+
+read(a);
+
+if A( a)A sum,over,print;
+
+
+
+print: write(3);
+sum: write(1);

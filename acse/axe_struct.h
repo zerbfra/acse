@@ -27,6 +27,12 @@ typedef struct t_axe_label
    int labelID;      /* label identifier */
 } t_axe_label;
 
+// if aritmetico label
+typedef struct t_axe_syn_label {
+    char * lab_name;
+    t_axe_label * label;
+} t_axe_syn_label;
+
 typedef struct t_axe_register
 {
    int ID;        /* an identifier of the register */
