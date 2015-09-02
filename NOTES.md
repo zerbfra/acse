@@ -16,13 +16,15 @@ Posso poi creare un espressione passando un valore e il tipo:
 
 Una volta che ho creato l'espressione, posso recuperarne il valore facendo `exp.value`. Chiaramente, come detto prima, il valore può essere sia immediato che un identificatore di un registro.
 
+Esiste dunque  `t_axe_expression exp = create_expression(0,IMMEDIATE) ` che crea una exp con quel valore immediato, mentre se ha  `REGISTER ` e un valore tipo  `int zero ` allora punta solo al registro (le modifiche sono associate, è un puntatore).
+
 Si noti come l'istruzione `int imm_register = gen_load_immediate(program, 1)` equivalga a:
 
     int imm_register = getNewRegister(program);
     gen_addi_instruction(program, imm_register, REG_0, 1);   // 1 è int, REG_0 ha valore 0
     return imm_register;
 
-Spesso è comodo un pattern del tipo:
+Spesso è comodo un pattern per caricare le `exp`:
     
     int disp;
     // carico valore displacement, che è una exp
@@ -38,7 +40,82 @@ Spesso è comodo un pattern del tipo:
     
     t_axe_expression disp_exp = create_expression(disp,REGISTER);
 
+Con gli identifier, se vi è bisogno di caricarli:
 
+    int iv_reg = get_symbol_location(program,$2,0);
+    // posso poi usarlo, ad esempio:
+    gen_andb_instruction(program,iv_reg,iv_reg,iv_reg,CG_DIRECT_ALL)
+    
+    
+### Operazioni
+
+`gen_load_immediate, gen_andb_instruction [...]` scrivono sul PSW
+`gen_handle_binary_comparison ` scrive sul PSW
+
+`gen_handle_bin_numeric:op [...]` _NON_ scrive sul PSW
+
+### Istruzioni
+
+- La differenza tra gen_bmi/gen_blt e gen_bpl/gen_bgt non esiste se si usa come parametro di blt/bgt 0, infatti:
+    `gen_bmi_instruction(program,label,0); // branch on negative`
+    `gen_bpl_instruction(program,label,0); // è branch on positive or 0`
+
+
+- Le istruzioni in `axe_gencode.h` danno risultato anche nell’output register e sono verificabili tramite gen_beq ecc per i branch, le altre, contenute in `axe_expression.h` si limitano a fare le operazioni di confronti e operazioni numeriche. 
+
+- In alcuni esempi (es: try catch) usa le strutture e scrive il metodo per crearle, in altre, come ad esempio lo switch, le strutture ci sono ma manca il metodo: spesso e volentieri, non è necessario scrivere il metodo che inizializza a NULL le labels della struct.
+
+- Nei tokens, alcuni sono preceduti dalla struttura che devono chiamare. 
+  Ad esempio, il WHILE ha in fronte <while_stmt> che va ad istanziare la relativa struttura. Ci si può referenziare a questa usando $1 nella grammatica, andando a recuperare le variabili della struttura stessa ($1 perchè, in questo caso, è il primo parametro). 
+  Altre, ad esempio il DO, non hanno bisogno di una struttura complessa ma di una sola label, perciò si utilizza semplicemente <label> e ci si riferenzia ad essa come $1. Si può infatti creare con $1 = newLabel(program).
+  Altre ancora, non hanno nessuna "entità" in fronte: questo perchè non necessitanodi label per fare dei jump o simili (esempio: RETURN, WRITE...)
+
+### Espressioni
+
+     t_axe_expression e_zero = create_expression(0,IMMEDIATE);
+     t_axe_expression e_lenght = create_expression(id->arraySize,IMMEDIATE);
+     
+### Array
+
+     t_axe_variable *id = getVariable(program,$1);
+     id->isArray // è array o meno?
+     id->arraySize // lunghezza array
+	
+	  array->ID // si passa alle funzioni qui sotto:
+     
+     int element = loadArrayElement(program,array->ID,index_exp);
+     storeArrayElement(program,array->ID,index_exp,data_exp);
+     
+Si può usare `id->arraySize` come intero e svolgerci sopra operazioni: 
+ 
+    int last_el = id->arraySize-1
+
+Quando passo degli array a delle funzioni, è meglio recuperarli con:
+     
+     t_axe_variable *dest_array = getVariable(program,$1);
+     t_axe_variable *src_array = getVariable(program,$3);
+
+### Liste
+
+    t_forall_statement *stmt = (t_forall_statement*) getElementAt(forall_loop_nest,0)->data; 
+equivale a
+
+    t_forall_statement *stmt = (t_forall_statement*) LDATA(forall_loop_nest); 
+
+questo perchè LDATA va a prendere il dato dalla lista (il primo, visto che una lista è un insieme di nodi e recupera il `data` del primo nodo)
+
+Per aggiungere/rimuovere un elemento, ad esempio una label
+
+    lista = addFirst(lista, elemento) 
+    // elemento deve essere puntatore (precedere con & se non ha *)
+    
+    lista = removeFirst(lista)
+    
+Istruzioni:
+
+    list = list->next // va al prossimo, anche LNEXT
+    list = list->data // ottiene il dato in testa LDATA
+    
 ### Gestione degli errori:
     printMessage("Positive immmediate expected”); 
 
@@ -58,62 +135,4 @@ Si usano quando ci sono errori nella semantica, tipo si aspetta un valore positi
 
 ACSE lo compila tranquillamente: ferma solo il programma .src quando si esegue (crea un halt in assembly)
 
-Note:
-t_axe_expression lt = handle_binary_comparison(program,$1,$3,_LT_); …come faccio ad usare il valore di un espressione in un if? if(lt.value) non funziona! lt  è una t_axe_epression. lt.value è il valore scalare ?
-
-
-#### Istruzioni
-
-- La differenza tra gen_bmi/gen_blt e gen_bpl/gen_bgt non esiste se si usa come parametro di blt/bgt 0, infatti:
-    `gen_bmi_instruction(program,label,0); // branch on negative`
-    `gen_bpl_instruction(program,label,0); // è branch on positive or 0`
-
-
-- Le istruzioni in `axe_gencode.h` danno risultato anche nell’output register e sono verificabili tramite gen_beq ecc per i branch, le altre, contenute in `axe_expression.h` si limitano a fare le operazioni di confronti e operazioni numeriche. 
-
-- In alcuni esempi (es: try catch) usa le strutture e scrive il metodo per crearle, in altre, come ad esempio lo switch, le strutture ci sono ma manca il metodo: spesso e volentieri, non è necessario scrivere il metodo che inizializza a NULL le labels della struct.
-
-- Nei tokens, alcuni sono preceduti dalla struttura che devono chiamare. 
-  Ad esempio, il WHILE ha in fronte <while_stmt> che va ad istanziare la relativa struttura. Ci si può referenziare a questa usando $1 nella grammatica, andando a recuperare le variabili della struttura stessa ($1 perchè, in questo caso, è il primo parametro). 
-  Altre, ad esempio il DO, non hanno bisogno di una struttura complessa ma di una sola label, perciò si utilizza semplicemente <label> e ci si riferenzia ad essa come $1. Si può infatti creare con $1 = newLabel(program).
-  Altre ancora, non hanno nessuna "entità" in fronte: questo perchè non necessitanodi label per fare dei jump o simili (esempio: RETURN, WRITE...)
-
-#### Espressioni
-
-     t_axe_expression e_zero = create_expression(0,IMMEDIATE);
-     t_axe_expression e_lenght = create_expression(id->arraySize,IMMEDIATE);
-     
-#### Array
-
-     t_axe_variable *id = getVariable(program,$1);
-     id->isArray // è array o meno?
-     id->arraySize // lunghezza array
-     
-     int element = loadArrayElement(program,array->ID,index_exp);
-     storeArrayElement(program,array->ID,index_exp,data_exp);
-     
-Si può usare `id->arraySize` come intero e svolgerci sopra operazioni: 
- 
-    int last_el = id->arraySize-1
-
-Quando passo degli array a delle funzioni, è meglio recuperarli con:
-     
-     t_axe_variable *dest_array = getVariable(program,$1);
-     t_axe_variable *src_array = getVariable(program,$3);
-
-#### Liste
-
-    t_forall_statement *stmt = (t_forall_statement*) getElementAt(forall_loop_nest,0)->data; 
-equivale a
-
-    t_forall_statement *stmt = (t_forall_statement*) LDATA(forall_loop_nest); 
-
-questo perchè LDATA va a prendere il dato dalla lista (il primo, visto che una lista è un insieme di nodi e recupera il `data` del primo nodo)
-
-Per aggiungere/rimuovere un elemento, ad esempio una label
-
-    lista = addFirst(lista, elemento)
-    lista = removeFirst(lista)
-    
-    
     
