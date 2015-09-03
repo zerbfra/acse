@@ -5,9 +5,12 @@ Di seguito alcune note che ho preso durante lo studio di ACSE.
 ### IMMEDIATE/REGISTER
 
 Una espressione può essere immediate oppure register. In particolare è immediate quando il valore è immediato, altrimenti è register quando punta, con un identificatore, ad un registro.
-
-    int zero = gen_load_immediate(0,IMMEDIATE);     // carico un IMMEDIATE, ritorna l'identificatore del registro
-    int one = getNewRegister(program);              // prende un nuovo registro dove salvarci int, ritorna identificatore
+	 
+	 // carico un IMMEDIATE, ritorna l'identificatore del registro
+    int zero = gen_load_immediate(0,IMMEDIATE);    
+    
+    // prende un nuovo registro dove salvarci int, ritorna identificatore
+    int one = getNewRegister(program);              
     gen_addi_instruction(program, one, REG_0, 1);   // posso usarlo per inserirci valori
 
 Posso poi creare un espressione passando un valore e il tipo:
@@ -45,6 +48,14 @@ Con gli identifier, se vi è bisogno di caricarli:
     int iv_reg = get_symbol_location(program,$2,0);
     // posso poi usarlo, ad esempio:
     gen_andb_instruction(program,iv_reg,iv_reg,iv_reg,CG_DIRECT_ALL)
+    
+Quindi: 
+
+- `NUMBER` sono `int`
+- `IDENTIFIER` sono `ID`, si prendono con `getVariable(program, char *ID)` solitamente sono nomi di variabili (anche array)
+- `exp` sono espressioni e vanno valutate se `IMMEDIATE` o meno
+
+
     
     
 ### Operazioni
@@ -135,4 +146,69 @@ Si usano quando ci sono errori nella semantica, tipo si aspetta un valore positi
 
 ACSE lo compila tranquillamente: ferma solo il programma .src quando si esegue (crea un halt in assembly)
 
+### Tipi
+
+Ricordati, che se serve una struttura, puoi fare 
+
+    %token <switch_stmt> SWITCH
+    [...]
+    // aggiungere in %union nei SEMANTIC RECORDS
+    t_switch_statement switch_stmt; (ricordare il * se va in una lista)
+    [...]
+    switch_statement: SWITCH [...] {
+    			$1.label_end = newLabel(program);
+    [...]
     
+Se serve solo una label, si può fare:
+
+    %token <label> ON
+    [...]
+    onflag_statement: ON [...] {
+    			$1 = newLabel(program);
+    [...]
+    
+Se in uno statement ti usa ad esempio uno statement che poi è una lista o altra struttura (expr_list), serve aggiungere dopo i vari token.
+
+    %type <list> expr_list
+
+Si prenda come esempio
+		
+		// tipi
+		%type <list> perm_list
+		%type <permutation_element> perm_elem
+		
+		// statements
+		perm_list : perm_list COMMA perm_elem 
+		  {
+				t_axe_permutation_element* last = (t_axe_perm_el *) LDATA(getLastElement($1));
+				last->destination = $3->source;
+				$$ = addLast($1, $3);
+		  }
+		  | perm_elem {
+				$$ = addLast(NULL, $1);
+		  }
+		;
+		
+		perm_elem : NUMBER { // in questo caso solo NUMBER! OCCHIO!
+			// t_axe_permutation non viene istanziata sopra, quindi crearla
+			t_axe_perm_el* result = (t_axe_perm_el*) _AXE_ALLOC_FUNCTION(sizeof (t_axe_perm_el));
+			result->source = $1;
+			result->destination = 0;
+			$$ = result;
+			}	
+		;
+		
+		// struttura in axe_struct.h
+		typedef struct t_axe_permutation_element
+		{
+		   int source;
+		   int destination;
+		} t_axe_permutation_element;
+
+    
+### Costanti
+
+Per definire costanti, ad esempio `LEFT` e `RIGHT` in constants.h
+
+    #define LEFT 100
+    #define RIGHT 101
